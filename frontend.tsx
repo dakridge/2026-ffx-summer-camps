@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createRoot } from "react-dom/client";
-import { Analytics } from "@vercel/analytics/react";
+import { inject } from "@vercel/analytics";
 import {
   Search,
   MapPin,
@@ -996,8 +996,6 @@ function App() {
 
       {/* Modal */}
       {selectedCamp && <CampModal camp={selectedCamp} onClose={() => setSelectedCamp(null)} />}
-
-      <Analytics />
     </div>
   );
 }
@@ -2013,3 +2011,6 @@ function CampModal({ camp, onClose }: { camp: Camp; onClose: () => void }) {
 
 const root = createRoot(document.getElementById("root")!);
 root.render(<App />);
+
+// Initialize Vercel Analytics
+inject();
