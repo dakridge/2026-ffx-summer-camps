@@ -1,111 +1,45 @@
----
-description: Use Bun instead of Node.js, npm, pnpm, or vite.
-globs: "*.ts, *.tsx, *.html, *.css, *.js, *.jsx, package.json"
-alwaysApply: false
----
+# CLAUDE.md
 
-Default to using Bun instead of Node.js.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
-- Use `bun test` instead of `jest` or `vitest`
-- Use `bun build <file.html|file.ts|file.css>` instead of `webpack` or `esbuild`
-- Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
-- Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
-- Use `bunx <package> <command>` instead of `npx <package> <command>`
-- Bun automatically loads .env, so don't use dotenv.
+## Commands
 
-## APIs
+```bash
+# Install dependencies
+bun install
 
-- `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`.
-- `bun:sqlite` for SQLite. Don't use `better-sqlite3`.
-- `Bun.redis` for Redis. Don't use `ioredis`.
-- `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`.
-- `WebSocket` is built-in. Don't use `ws`.
-- Prefer `Bun.file` over `node:fs`'s readFile/writeFile
-- Bun.$`ls` instead of execa.
+# Run development server with hot reload (port 3002)
+bun run dev
 
-## Testing
-
-Use `bun test` to run tests.
-
-```ts#index.test.ts
-import { test, expect } from "bun:test";
-
-test("hello world", () => {
-  expect(1).toBe(1);
-});
+# Convert XLSX camp data to JSON (with geocoding)
+bun xlsx-to-json.ts data/FCPA\ Camp\ Spreadsheet.xlsx data/fcpa-camps.json
 ```
 
-## Frontend
+## Architecture
 
-Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
+This is a Fairfax County Parks summer camp explorer - a React SPA with a Bun backend.
 
-Server:
+### Data Flow
+1. **Source**: `data/FCPA Camp Spreadsheet.xlsx` - raw camp data from FCPA
+2. **Conversion**: `xlsx-to-json.ts` parses the XLSX, infers types (dates, times, ages, fees), geocodes locations via Nominatim (cached in `data/.geocode-cache.json`), and outputs structured JSON
+3. **API**: `index.ts` serves `data/fcpa-camps.json` at `/api/camps`
+4. **Frontend**: `frontend.tsx` fetches and renders camps with filtering
 
-```ts#index.ts
-import index from "./index.html"
+### Key Files
+- `index.ts` - Bun server with HTML import and API route
+- `frontend.tsx` - Single-file React app (~900 lines) with all components inline
+- `index.html` - Entry point with Tailwind CDN config and custom CSS
+- `xlsx-to-json.ts` - Data pipeline with geocoding and type inference
+- `data/location-addresses.json` - Manual address mappings for geocoding failures
 
-Bun.serve({
-  routes: {
-    "/": index,
-    "/api/users/:id": {
-      GET: (req) => {
-        return new Response(JSON.stringify({ id: req.params.id }));
-      },
-    },
-  },
-  // optional websocket support
-  websocket: {
-    open: (ws) => {
-      ws.send("Hello, world!");
-    },
-    message: (ws, message) => {
-      ws.send(message);
-    },
-    close: (ws) => {
-      // handle close
-    }
-  },
-  development: {
-    hmr: true,
-    console: true,
-  }
-})
-```
+### Frontend State
+- Filter state persists to URL params (`q`, `cat`, `comm`, `loc`, `week`, `minAge`, `maxAge`, `maxFee`, `view`)
+- Map uses Leaflet loaded dynamically from CDN
+- Custom marker icons rendered as inline SVG
 
-HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
+## Bun-Specific
 
-```html#index.html
-<html>
-  <body>
-    <h1>Hello, world!</h1>
-    <script type="module" src="./frontend.tsx"></script>
-  </body>
-</html>
-```
-
-With the following `frontend.tsx`:
-
-```tsx#frontend.tsx
-import React from "react";
-import { createRoot } from "react-dom/client";
-
-// import .css files directly and it works
-import './index.css';
-
-const root = createRoot(document.body);
-
-export default function Frontend() {
-  return <h1>Hello, world!</h1>;
-}
-
-root.render(<Frontend />);
-```
-
-Then, run index.ts
-
-```sh
-bun --hot ./index.ts
-```
-
-For more information, read the Bun API docs in `node_modules/bun-types/docs/**.mdx`.
+- Use `Bun.serve()` with routes and HTML imports (not Express or Vite)
+- Use `Bun.file()` for file I/O
+- Bun automatically loads `.env` files
+- Run tests with `bun test`
