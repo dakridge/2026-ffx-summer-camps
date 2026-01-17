@@ -1,6 +1,6 @@
+"use client";
+
 import React, { useState, useEffect, useMemo } from "react";
-import { createRoot } from "react-dom/client";
-import { inject } from "@vercel/analytics";
 import {
   Search,
   MapPin,
@@ -136,35 +136,118 @@ function getDistanceMiles(
 }
 
 // Category icons and colors
-const categoryStyles: Record<string, { icon: string; bg: string; text: string; border: string }> = {
-  "Active Games": { icon: "run", bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-200" },
-  "Art": { icon: "palette", bg: "bg-pink-100", text: "text-pink-700", border: "border-pink-200" },
-  "Cooking": { icon: "chef", bg: "bg-amber-100", text: "text-amber-700", border: "border-amber-200" },
-  "Dance": { icon: "music", bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" },
-  "Drama": { icon: "theater", bg: "bg-rose-100", text: "text-rose-700", border: "border-rose-200" },
-  "Horseback Riding": { icon: "horse", bg: "bg-yellow-100", text: "text-yellow-700", border: "border-yellow-200" },
-  "Inclusion": { icon: "heart", bg: "bg-teal-100", text: "text-teal-700", border: "border-teal-200" },
-  "Multi-Activity": { icon: "star", bg: "bg-camp-sun-light", text: "text-amber-700", border: "border-amber-200" },
-  "Nature": { icon: "leaf", bg: "bg-emerald-100", text: "text-emerald-700", border: "border-emerald-200" },
-  "Science": { icon: "beaker", bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" },
-  "Sports": { icon: "ball", bg: "bg-red-100", text: "text-red-700", border: "border-red-200" },
-  "STEM": { icon: "robot", bg: "bg-indigo-100", text: "text-indigo-700", border: "border-indigo-200" },
-  "Teen": { icon: "users", bg: "bg-slate-100", text: "text-slate-700", border: "border-slate-200" },
-  "Water Activities": { icon: "wave", bg: "bg-cyan-100", text: "text-cyan-700", border: "border-cyan-200" },
+const categoryStyles: Record<
+  string,
+  { icon: string; bg: string; text: string; border: string }
+> = {
+  "Active Games": {
+    icon: "run",
+    bg: "bg-orange-100",
+    text: "text-orange-700",
+    border: "border-orange-200",
+  },
+  Art: {
+    icon: "palette",
+    bg: "bg-pink-100",
+    text: "text-pink-700",
+    border: "border-pink-200",
+  },
+  Cooking: {
+    icon: "chef",
+    bg: "bg-amber-100",
+    text: "text-amber-700",
+    border: "border-amber-200",
+  },
+  Dance: {
+    icon: "music",
+    bg: "bg-purple-100",
+    text: "text-purple-700",
+    border: "border-purple-200",
+  },
+  Drama: {
+    icon: "theater",
+    bg: "bg-rose-100",
+    text: "text-rose-700",
+    border: "border-rose-200",
+  },
+  "Horseback Riding": {
+    icon: "horse",
+    bg: "bg-yellow-100",
+    text: "text-yellow-700",
+    border: "border-yellow-200",
+  },
+  Inclusion: {
+    icon: "heart",
+    bg: "bg-teal-100",
+    text: "text-teal-700",
+    border: "border-teal-200",
+  },
+  "Multi-Activity": {
+    icon: "star",
+    bg: "bg-camp-sun-light",
+    text: "text-amber-700",
+    border: "border-amber-200",
+  },
+  Nature: {
+    icon: "leaf",
+    bg: "bg-emerald-100",
+    text: "text-emerald-700",
+    border: "border-emerald-200",
+  },
+  Science: {
+    icon: "beaker",
+    bg: "bg-blue-100",
+    text: "text-blue-700",
+    border: "border-blue-200",
+  },
+  Sports: {
+    icon: "ball",
+    bg: "bg-red-100",
+    text: "text-red-700",
+    border: "border-red-200",
+  },
+  STEM: {
+    icon: "robot",
+    bg: "bg-indigo-100",
+    text: "text-indigo-700",
+    border: "border-indigo-200",
+  },
+  Teen: {
+    icon: "users",
+    bg: "bg-slate-100",
+    text: "text-slate-700",
+    border: "border-slate-200",
+  },
+  "Water Activities": {
+    icon: "wave",
+    bg: "bg-cyan-100",
+    text: "text-cyan-700",
+    border: "border-cyan-200",
+  },
 };
 
 function getCategoryStyle(category: string) {
-  return categoryStyles[category] || { icon: "star", bg: "bg-gray-100", text: "text-gray-700", border: "border-gray-200" };
+  return (
+    categoryStyles[category] || {
+      icon: "star",
+      bg: "bg-gray-100",
+      text: "text-gray-700",
+      border: "border-gray-200",
+    }
+  );
 }
 
 // URL params helpers
 function filtersToParams(filters: Filters): URLSearchParams {
   const params = new URLSearchParams();
   if (filters.search) params.set("q", filters.search);
-  if (filters.categories.length) params.set("cat", filters.categories.join(","));
-  if (filters.communities.length) params.set("comm", filters.communities.join(","));
+  if (filters.categories.length)
+    params.set("cat", filters.categories.join(","));
+  if (filters.communities.length)
+    params.set("comm", filters.communities.join(","));
   if (filters.locations.length) params.set("loc", filters.locations.join(","));
-  if (filters.dateRanges.length) params.set("week", filters.dateRanges.join("|"));
+  if (filters.dateRanges.length)
+    params.set("week", filters.dateRanges.join("|"));
   if (filters.minAge !== null) params.set("minAge", filters.minAge.toString());
   if (filters.maxAge !== null) params.set("maxAge", filters.maxAge.toString());
   if (filters.maxFee !== null) params.set("maxFee", filters.maxFee.toString());
@@ -198,14 +281,20 @@ const Icons = {
   map: <MapIcon className="w-5 h-5" strokeWidth={2} />,
   x: <X className="w-4 h-4" strokeWidth={2} />,
   tent: <Tent className="w-8 h-8" strokeWidth={1.5} />,
-  sun: <Sun className="w-6 h-6 text-camp-sun" fill="currentColor" strokeWidth={0} />,
+  sun: (
+    <Sun className="w-6 h-6 text-camp-sun" fill="currentColor" strokeWidth={0} />
+  ),
   tree: <TreePine className="w-5 h-5 text-camp-forest" />,
   dollar: <DollarSign className="w-4 h-4" strokeWidth={2} />,
   chevronDown: <ChevronDown className="w-4 h-4" strokeWidth={2} />,
-  sparkles: <Sparkles className="w-5 h-5" fill="currentColor" strokeWidth={0} />,
+  sparkles: (
+    <Sparkles className="w-5 h-5" fill="currentColor" strokeWidth={0} />
+  ),
   filter: <SlidersHorizontal className="w-5 h-5" strokeWidth={2} />,
   heart: <Heart className="w-5 h-5" strokeWidth={2} />,
-  heartFilled: <Heart className="w-5 h-5" fill="currentColor" strokeWidth={0} />,
+  heartFilled: (
+    <Heart className="w-5 h-5" fill="currentColor" strokeWidth={0} />
+  ),
   planner: <ClipboardList className="w-5 h-5" strokeWidth={2} />,
   printer: <Printer className="w-5 h-5" strokeWidth={2} />,
   check: <Check className="w-4 h-4" strokeWidth={2} />,
@@ -366,14 +455,17 @@ function PlannerPDF({ weeks, plannedCamps, totalCost }: PlannerPDFProps) {
           return (
             <View key={week.dateRange} style={pdfStyles.weekRow}>
               <Text style={pdfStyles.weekDate}>
-                {week.startDate.monthName.slice(0, 3)} {week.startDate.day} - {week.endDate.day}
+                {week.startDate.monthName.slice(0, 3)} {week.startDate.day} -{" "}
+                {week.endDate.day}
               </Text>
               <View style={pdfStyles.weekCamp}>
                 {camp ? (
                   <>
                     <Text style={pdfStyles.weekCampTitle}>{camp.title}</Text>
                     <Text style={pdfStyles.weekCampDetails}>
-                      {camp.location} · {camp.startTime.formatted} - {camp.endTime.formatted} · Ages {camp.minAge}-{camp.maxAge}
+                      {camp.location} · {camp.startTime.formatted} -{" "}
+                      {camp.endTime.formatted} · Ages {camp.minAge}-
+                      {camp.maxAge}
                     </Text>
                   </>
                 ) : (
@@ -394,49 +486,56 @@ function PlannerPDF({ weeks, plannedCamps, totalCost }: PlannerPDFProps) {
         </View>
 
         <Text style={pdfStyles.generated}>
-          Generated on {new Date().toLocaleDateString()} · Summer Camp Explorer · fairfax-camps.vercel.app
+          Generated on {new Date().toLocaleDateString()} · Summer Camp Explorer
+          · fairfax-camps.vercel.app
         </Text>
       </Page>
     </Document>
   );
 }
 
-function App() {
+export default function HomePage() {
   const [data, setData] = useState<CampsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<Filters>(() => {
-    const params = new URLSearchParams(window.location.search);
-    return paramsToFilters(params);
-  });
-  const [view, setView] = useState<"list" | "map" | "calendar" | "planner">(() => {
-    const params = new URLSearchParams(window.location.search);
-    const v = params.get("view");
-    if (v === "map" || v === "calendar" || v === "planner") return v;
-    return "list";
-  });
-  const [plannedCamps, setPlannedCamps] = useState<Map<string, Camp>>(new Map());
+  const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [view, setView] = useState<"list" | "map" | "calendar" | "planner">(
+    "list"
+  );
+  const [plannedCamps, setPlannedCamps] = useState<Map<string, Camp>>(
+    new Map()
+  );
   const [isSharedPlan, setIsSharedPlan] = useState(false);
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [favorites, setFavorites] = useState<Set<string>>(() => {
-    try {
-      const saved = localStorage.getItem("camp-favorites");
-      return saved ? new Set(JSON.parse(saved)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(() => {
-    try {
-      const saved = localStorage.getItem("camp-user-location");
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
-  const [sortBy, setSortBy] = useState<"default" | "distance" | "price" | "priceDesc" | "date" | "name">("default");
+  const [sortBy, setSortBy] = useState<
+    "default" | "distance" | "price" | "priceDesc" | "date" | "name"
+  >("default");
+
+  // Initialize state from URL params and localStorage on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setFilters(paramsToFilters(params));
+
+    const v = params.get("view");
+    if (v === "map" || v === "calendar" || v === "planner") setView(v);
+
+    try {
+      const savedFavorites = localStorage.getItem("camp-favorites");
+      if (savedFavorites) setFavorites(new Set(JSON.parse(savedFavorites)));
+    } catch {}
+
+    try {
+      const savedLocation = localStorage.getItem("camp-user-location");
+      if (savedLocation) setUserLocation(JSON.parse(savedLocation));
+    } catch {}
+  }, []);
 
   // Persist user location to localStorage
   useEffect(() => {
@@ -452,7 +551,7 @@ function App() {
 
   // Persist planned camps to localStorage (skip while loading or viewing shared plan)
   useEffect(() => {
-    if (loading) return; // Don't save while loading (we haven't loaded existing data yet)
+    if (loading) return;
     if (isSharedPlan) return;
     const obj: Record<string, Camp> = {};
     plannedCamps.forEach((camp, week) => {
@@ -503,9 +602,13 @@ function App() {
       (error) => {
         setLocationLoading(false);
         if (error.code === error.PERMISSION_DENIED) {
-          alert("Location access denied. You can click on the map to set your location manually.");
+          alert(
+            "Location access denied. You can click on the map to set your location manually."
+          );
         } else {
-          alert("Unable to get your location. You can click on the map to set it manually.");
+          alert(
+            "Unable to get your location. You can click on the map to set it manually."
+          );
         }
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -519,16 +622,16 @@ function App() {
   };
 
   useEffect(() => {
-    // Don't update URL while loading (preserve plan param until we process it)
     if (loading) return;
-    // Don't update URL when viewing a shared plan (preserve the plan param)
     if (isSharedPlan) return;
 
     const params = filtersToParams(filters);
     if (view === "map") params.set("view", "map");
     if (view === "calendar") params.set("view", "calendar");
     if (view === "planner") params.set("view", "planner");
-    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+    const newUrl = params.toString()
+      ? `?${params.toString()}`
+      : window.location.pathname;
     window.history.replaceState({}, "", newUrl);
   }, [filters, view, isSharedPlan, loading]);
 
@@ -539,12 +642,10 @@ function App() {
         setData(d);
         setLoading(false);
 
-        // Check for shared plan in URL
         const params = new URLSearchParams(window.location.search);
         const planParam = params.get("plan");
 
         if (planParam) {
-          // Decode shared plan from URL
           try {
             const planPairs = planParam.split(",");
             const sharedPlan = new Map<string, Camp>();
@@ -563,15 +664,15 @@ function App() {
             }
           } catch {}
         } else {
-          // Load from localStorage
           try {
             const saved = localStorage.getItem("camp-planner");
             if (saved) {
               const parsed = JSON.parse(saved);
               const localPlan = new Map<string, Camp>();
               Object.entries(parsed).forEach(([week, campData]) => {
-                // Re-hydrate camp from current data to ensure it's up to date
-                const camp = d.camps.find((c: Camp) => c.catalogId === (campData as Camp).catalogId);
+                const camp = d.camps.find(
+                  (c: Camp) => c.catalogId === (campData as Camp).catalogId
+                );
                 if (camp) {
                   localPlan.set(week, camp);
                 }
@@ -596,19 +697,36 @@ function App() {
           camp.catalogId.toLowerCase().includes(search);
         if (!matchesSearch) return false;
       }
-      if (filters.categories.length > 0 && !filters.categories.includes(camp.category)) return false;
-      if (filters.communities.length > 0 && !filters.communities.includes(camp.community)) return false;
-      if (filters.locations.length > 0 && !filters.locations.includes(camp.location)) return false;
-      if (filters.dateRanges.length > 0 && !filters.dateRanges.includes(camp.dateRange)) return false;
+      if (
+        filters.categories.length > 0 &&
+        !filters.categories.includes(camp.category)
+      )
+        return false;
+      if (
+        filters.communities.length > 0 &&
+        !filters.communities.includes(camp.community)
+      )
+        return false;
+      if (
+        filters.locations.length > 0 &&
+        !filters.locations.includes(camp.location)
+      )
+        return false;
+      if (
+        filters.dateRanges.length > 0 &&
+        !filters.dateRanges.includes(camp.dateRange)
+      )
+        return false;
       if (filters.minAge !== null && camp.maxAge < filters.minAge) return false;
       if (filters.maxAge !== null && camp.minAge > filters.maxAge) return false;
       if (filters.maxFee !== null && camp.fee > filters.maxFee) return false;
-      if (filters.startHour !== null && camp.startTime.hour > filters.startHour) return false;
-      if (filters.endHour !== null && camp.endTime.hour < filters.endHour) return false;
+      if (filters.startHour !== null && camp.startTime.hour > filters.startHour)
+        return false;
+      if (filters.endHour !== null && camp.endTime.hour < filters.endHour)
+        return false;
       return true;
     });
 
-    // Add distance to each camp if user location is set
     const campsWithDistance = camps.map((camp) => {
       let distance: number | null = null;
       if (userLocation && camp.coordinates) {
@@ -622,7 +740,6 @@ function App() {
       return { ...camp, distance };
     });
 
-    // Sort based on selected sort option
     if (sortBy === "distance" && userLocation) {
       campsWithDistance.sort((a, b) => {
         if (a.distance === null) return 1;
@@ -634,8 +751,10 @@ function App() {
     } else if (sortBy === "priceDesc") {
       campsWithDistance.sort((a, b) => b.fee - a.fee);
     } else if (sortBy === "date") {
-      campsWithDistance.sort((a, b) =>
-        new Date(a.startDate.iso).getTime() - new Date(b.startDate.iso).getTime()
+      campsWithDistance.sort(
+        (a, b) =>
+          new Date(a.startDate.iso).getTime() -
+          new Date(b.startDate.iso).getTime()
       );
     } else if (sortBy === "name") {
       campsWithDistance.sort((a, b) => a.title.localeCompare(b.title));
@@ -644,19 +763,32 @@ function App() {
     return campsWithDistance;
   }, [data, filters, favorites, showFavoritesOnly, userLocation, sortBy]);
 
-  const toggleFilter = (type: "categories" | "communities" | "dateRanges", value: string) => {
+  const toggleFilter = (
+    type: "categories" | "communities" | "dateRanges",
+    value: string
+  ) => {
     setFilters((prev) => {
       const current = prev[type];
-      const updated = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
+      const updated = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
       return { ...prev, [type]: updated };
     });
   };
 
   const clearFilters = () => setFilters(initialFilters);
 
-  const hasActiveFilters = filters.search || filters.categories.length || filters.communities.length ||
-    filters.locations.length || filters.dateRanges.length || filters.minAge !== null ||
-    filters.maxAge !== null || filters.maxFee !== null || filters.startHour !== null || filters.endHour !== null;
+  const hasActiveFilters =
+    filters.search ||
+    filters.categories.length ||
+    filters.communities.length ||
+    filters.locations.length ||
+    filters.dateRanges.length ||
+    filters.minAge !== null ||
+    filters.maxAge !== null ||
+    filters.maxFee !== null ||
+    filters.startHour !== null ||
+    filters.endHour !== null;
 
   if (loading) {
     return (
@@ -669,10 +801,14 @@ function App() {
             <div className="absolute -top-2 -right-2">{Icons.sun}</div>
           </div>
           <div className="w-48 h-1.5 bg-camp-sand rounded-full mx-auto overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-camp-terracotta to-camp-sun animate-pulse rounded-full"
-                 style={{ width: '60%' }} />
+            <div
+              className="h-full bg-gradient-to-r from-camp-terracotta to-camp-sun animate-pulse rounded-full"
+              style={{ width: "60%" }}
+            />
           </div>
-          <p className="mt-4 text-camp-bark/70 font-medium">Loading adventures...</p>
+          <p className="mt-4 text-camp-bark/70 font-medium">
+            Loading adventures...
+          </p>
         </div>
       </div>
     );
@@ -689,12 +825,14 @@ function App() {
       )}
 
       {/* Sidebar */}
-      <aside className={`
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      <aside
+        className={`
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
         w-80 bg-white border-r border-camp-sand flex-shrink-0 flex flex-col
         transition-transform duration-300 ease-in-out
-      `}>
+      `}
+      >
         {/* Decorative top bar */}
         <div className="h-1.5 bg-gradient-to-r from-camp-terracotta via-camp-sun to-camp-forest" />
 
@@ -709,8 +847,12 @@ function App() {
                   {Icons.tent}
                 </div>
                 <div>
-                  <h1 className="font-display text-xl font-bold text-camp-pine tracking-tight">Camp Explorer</h1>
-                  <p className="text-xs text-camp-bark/60 font-medium">Fairfax County Parks</p>
+                  <h1 className="font-display text-xl font-bold text-camp-pine tracking-tight">
+                    Camp Explorer
+                  </h1>
+                  <p className="text-xs text-camp-bark/60 font-medium">
+                    Fairfax County Parks
+                  </p>
                 </div>
               </div>
               <button
@@ -738,8 +880,13 @@ function App() {
                   : "bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100"
               }`}
             >
-              <Heart className="w-4 h-4" fill={showFavoritesOnly ? "currentColor" : "none"} />
-              {showFavoritesOnly ? `Showing ${favorites.size} Favorites` : `Show ${favorites.size} Favorites`}
+              <Heart
+                className="w-4 h-4"
+                fill={showFavoritesOnly ? "currentColor" : "none"}
+              />
+              {showFavoritesOnly
+                ? `Showing ${favorites.size} Favorites`
+                : `Show ${favorites.size} Favorites`}
             </button>
           )}
 
@@ -782,7 +929,9 @@ function App() {
               </button>
             )}
             <p className="text-[10px] text-camp-bark/50 mt-1.5">
-              {userLocation ? "Drag pin on map to adjust" : "Or click the map to set location"}
+              {userLocation
+                ? "Drag pin on map to adjust"
+                : "Or click the map to set location"}
             </p>
           </div>
 
@@ -798,7 +947,9 @@ function App() {
             >
               <option value="default">Default</option>
               <option value="name">Name (A-Z)</option>
-              <option value="distance" disabled={!userLocation}>Distance (nearest first)</option>
+              <option value="distance" disabled={!userLocation}>
+                Distance (nearest first)
+              </option>
               <option value="price">Price (lowest first)</option>
               <option value="priceDesc">Price (highest first)</option>
               <option value="date">Date (earliest first)</option>
@@ -818,7 +969,9 @@ function App() {
                 type="text"
                 placeholder="Camp name, location..."
                 value={filters.search}
-                onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, search: e.target.value }))
+                }
                 className="w-full pl-10 pr-4 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30"
               />
             </div>
@@ -827,7 +980,7 @@ function App() {
           {/* Age */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-camp-bark/50 mb-2">
-              Child's Age
+              Child&apos;s Age
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -836,7 +989,12 @@ function App() {
                 min={3}
                 max={18}
                 value={filters.minAge ?? ""}
-                onChange={(e) => setFilters((prev) => ({ ...prev, minAge: e.target.value ? parseInt(e.target.value) : null }))}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    minAge: e.target.value ? parseInt(e.target.value) : null,
+                  }))
+                }
                 className="flex-1 px-3 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30"
               />
               <span className="text-camp-bark/40 text-sm">to</span>
@@ -846,7 +1004,12 @@ function App() {
                 min={3}
                 max={18}
                 value={filters.maxAge ?? ""}
-                onChange={(e) => setFilters((prev) => ({ ...prev, maxAge: e.target.value ? parseInt(e.target.value) : null }))}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    maxAge: e.target.value ? parseInt(e.target.value) : null,
+                  }))
+                }
                 className="flex-1 px-3 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30"
               />
             </div>
@@ -865,7 +1028,12 @@ function App() {
                 type="number"
                 placeholder="Maximum fee"
                 value={filters.maxFee ?? ""}
-                onChange={(e) => setFilters((prev) => ({ ...prev, maxFee: e.target.value ? parseInt(e.target.value) : null }))}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    maxFee: e.target.value ? parseInt(e.target.value) : null,
+                  }))
+                }
                 className="w-full pl-9 pr-4 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30"
               />
             </div>
@@ -883,7 +1051,14 @@ function App() {
                 </div>
                 <select
                   value={filters.startHour ?? ""}
-                  onChange={(e) => setFilters((prev) => ({ ...prev, startHour: e.target.value ? parseInt(e.target.value) : null }))}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      startHour: e.target.value
+                        ? parseInt(e.target.value)
+                        : null,
+                    }))
+                  }
                   className="w-full pl-9 pr-4 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine appearance-none cursor-pointer transition-all hover:border-camp-terracotta/30"
                 >
                   <option value="">Starts by...</option>
@@ -904,7 +1079,12 @@ function App() {
                 </div>
                 <select
                   value={filters.endHour ?? ""}
-                  onChange={(e) => setFilters((prev) => ({ ...prev, endHour: e.target.value ? parseInt(e.target.value) : null }))}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      endHour: e.target.value ? parseInt(e.target.value) : null,
+                    }))
+                  }
                   className="w-full pl-9 pr-4 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine appearance-none cursor-pointer transition-all hover:border-camp-terracotta/30"
                 >
                   <option value="">Ends after...</option>
@@ -957,12 +1137,16 @@ function App() {
             <div className="relative">
               <select
                 value=""
-                onChange={(e) => e.target.value && toggleFilter("communities", e.target.value)}
+                onChange={(e) =>
+                  e.target.value && toggleFilter("communities", e.target.value)
+                }
                 className="w-full px-3 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-bark/60 appearance-none cursor-pointer transition-all hover:border-camp-terracotta/30"
               >
                 <option value="">Select community...</option>
                 {data?.metadata.enums.communities.map((comm) => (
-                  <option key={comm} value={comm}>{comm}</option>
+                  <option key={comm} value={comm}>
+                    {comm}
+                  </option>
                 ))}
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-camp-bark/40 pointer-events-none">
@@ -995,7 +1179,12 @@ function App() {
                 {filters.locations.map((loc) => (
                   <button
                     key={loc}
-                    onClick={() => setFilters((prev) => ({ ...prev, locations: prev.locations.filter((l) => l !== loc) }))}
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        locations: prev.locations.filter((l) => l !== loc),
+                      }))
+                    }
                     className="px-3 py-1 rounded-full text-xs font-semibold bg-camp-terracotta/10 text-camp-terracotta border border-camp-terracotta/20 flex items-center gap-1.5 hover:bg-camp-terracotta/20 transition-colors"
                   >
                     {loc}
@@ -1014,12 +1203,16 @@ function App() {
             <div className="relative">
               <select
                 value=""
-                onChange={(e) => e.target.value && toggleFilter("dateRanges", e.target.value)}
+                onChange={(e) =>
+                  e.target.value && toggleFilter("dateRanges", e.target.value)
+                }
                 className="w-full px-3 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-bark/60 appearance-none cursor-pointer transition-all hover:border-camp-terracotta/30"
               >
                 <option value="">Select week...</option>
                 {data?.metadata.enums.dateRanges.map((dr) => (
-                  <option key={dr} value={dr}>{dr}</option>
+                  <option key={dr} value={dr}>
+                    {dr}
+                  </option>
                 ))}
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-camp-bark/40 pointer-events-none">
@@ -1069,7 +1262,9 @@ function App() {
               )}
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-xl sm:text-2xl font-display font-bold text-camp-terracotta">{filteredCamps.length}</span>
+              <span className="text-xl sm:text-2xl font-display font-bold text-camp-terracotta">
+                {filteredCamps.length}
+              </span>
               <span className="text-camp-bark/60 text-xs sm:text-sm">
                 {filteredCamps.length === 1 ? "camp" : "camps"} found
               </span>
@@ -1127,7 +1322,12 @@ function App() {
         {/* Content */}
         <div className="flex-1 overflow-hidden relative">
           {view === "list" && (
-            <CampList camps={filteredCamps} onSelect={setSelectedCamp} favorites={favorites} onToggleFavorite={toggleFavorite} />
+            <CampList
+              camps={filteredCamps}
+              onSelect={setSelectedCamp}
+              favorites={favorites}
+              onToggleFavorite={toggleFavorite}
+            />
           )}
           {view === "map" && (
             <CampMap
@@ -1157,11 +1357,12 @@ function App() {
               isSharedPlan={isSharedPlan}
               onSaveSharedPlan={() => {
                 setIsSharedPlan(false);
-                // Clear URL plan param
                 const params = new URLSearchParams(window.location.search);
                 params.delete("plan");
                 params.set("view", "planner");
-                const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+                const newUrl = params.toString()
+                  ? `?${params.toString()}`
+                  : window.location.pathname;
                 window.history.replaceState({}, "", newUrl);
               }}
             />
@@ -1170,12 +1371,24 @@ function App() {
       </main>
 
       {/* Modal */}
-      {selectedCamp && <CampModal camp={selectedCamp} onClose={() => setSelectedCamp(null)} />}
+      {selectedCamp && (
+        <CampModal camp={selectedCamp} onClose={() => setSelectedCamp(null)} />
+      )}
     </div>
   );
 }
 
-function CampList({ camps, onSelect, favorites, onToggleFavorite }: { camps: Camp[]; onSelect: (camp: Camp) => void; favorites: Set<string>; onToggleFavorite: (id: string) => void }) {
+function CampList({
+  camps,
+  onSelect,
+  favorites,
+  onToggleFavorite,
+}: {
+  camps: Camp[];
+  onSelect: (camp: Camp) => void;
+  favorites: Set<string>;
+  onToggleFavorite: (id: string) => void;
+}) {
   if (camps.length === 0) {
     return (
       <div className="h-full flex items-center justify-center p-8">
@@ -1183,7 +1396,9 @@ function CampList({ camps, onSelect, favorites, onToggleFavorite }: { camps: Cam
           <div className="w-20 h-20 mx-auto mb-6 bg-camp-sand/50 rounded-2xl flex items-center justify-center text-camp-bark/30">
             {Icons.search}
           </div>
-          <h3 className="font-display text-xl font-bold text-camp-pine mb-2">No camps found</h3>
+          <h3 className="font-display text-xl font-bold text-camp-pine mb-2">
+            No camps found
+          </h3>
           <p className="text-camp-bark/60 text-sm">
             Try adjusting your filters to discover more adventures
           </p>
@@ -1199,8 +1414,11 @@ function CampList({ camps, onSelect, favorites, onToggleFavorite }: { camps: Cam
           <div
             key={`${camp.catalogId}-${i}`}
             onClick={() => onSelect(camp)}
-            className={`group bg-white rounded-2xl p-5 shadow-camp camp-card-hover cursor-pointer border border-transparent hover:border-camp-terracotta/20 animate-slide-up opacity-0 stagger-${Math.min((i % 6) + 1, 6)}`}
-            style={{ animationFillMode: 'forwards' }}
+            className={`group bg-white rounded-2xl p-5 shadow-camp camp-card-hover cursor-pointer border border-transparent hover:border-camp-terracotta/20 animate-slide-up opacity-0 stagger-${Math.min(
+              (i % 6) + 1,
+              6
+            )}`}
+            style={{ animationFillMode: "forwards" }}
           >
             {/* Header */}
             <div className="flex items-start justify-between gap-2 mb-3">
@@ -1218,7 +1436,10 @@ function CampList({ camps, onSelect, favorites, onToggleFavorite }: { camps: Cam
                     : "text-camp-bark/30 hover:text-rose-400 hover:bg-rose-50"
                 }`}
               >
-                <Heart className="w-5 h-5" fill={favorites.has(camp.catalogId) ? "currentColor" : "none"} />
+                <Heart
+                  className="w-5 h-5"
+                  fill={favorites.has(camp.catalogId) ? "currentColor" : "none"}
+                />
               </button>
               <div className="flex-shrink-0 px-3 py-1 bg-gradient-to-r from-camp-terracotta to-camp-terracotta-dark text-white font-bold text-sm rounded-lg shadow-sm">
                 ${camp.fee}
@@ -1230,7 +1451,9 @@ function CampList({ camps, onSelect, favorites, onToggleFavorite }: { camps: Cam
               {(() => {
                 const style = getCategoryStyle(camp.category);
                 return (
-                  <span className={`inline-block px-2.5 py-1 ${style.bg} ${style.text} text-[10px] font-bold uppercase tracking-wider rounded-md`}>
+                  <span
+                    className={`inline-block px-2.5 py-1 ${style.bg} ${style.text} text-[10px] font-bold uppercase tracking-wider rounded-md`}
+                  >
                     {camp.category}
                   </span>
                 );
@@ -1248,7 +1471,9 @@ function CampList({ camps, onSelect, favorites, onToggleFavorite }: { camps: Cam
               <div className="flex items-start gap-2">
                 <div className="mt-0.5 text-camp-terracotta">{Icons.location}</div>
                 <div>
-                  <div className="font-semibold text-camp-pine text-xs">{camp.location}</div>
+                  <div className="font-semibold text-camp-pine text-xs">
+                    {camp.location}
+                  </div>
                 </div>
               </div>
               <div className="flex items-start gap-2">
@@ -1302,10 +1527,15 @@ function CampMap({
     const initMap = () => {
       if (mapRef.current && !mapInstanceRef.current) {
         const leaflet = (window as any).L;
-        mapInstanceRef.current = leaflet.map(mapRef.current).setView([38.85, -77.3], 10);
-        leaflet.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png").addTo(mapInstanceRef.current);
+        mapInstanceRef.current = leaflet
+          .map(mapRef.current)
+          .setView([38.85, -77.3], 10);
+        leaflet
+          .tileLayer(
+            "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          )
+          .addTo(mapInstanceRef.current);
 
-        // Add click handler for setting user location
         mapInstanceRef.current.on("click", (e: any) => {
           onSetUserLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
         });
@@ -1353,9 +1583,8 @@ function CampMap({
       }
     });
 
-    // Custom marker icon with better contrast
     const customIcon = L.divIcon({
-      className: 'custom-marker',
+      className: "custom-marker",
       html: `<div style="position: relative; width: 40px; height: 48px;">
         <svg width="40" height="48" viewBox="0 0 40 48" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M20 0C8.954 0 0 8.954 0 20c0 14.667 20 28 20 28s20-13.333 20-28C40 8.954 31.046 0 20 0z" fill="#1B4332"/>
@@ -1367,12 +1596,14 @@ function CampMap({
       </div>`,
       iconSize: [40, 48],
       iconAnchor: [20, 48],
-      popupAnchor: [0, -48]
+      popupAnchor: [0, -48],
     });
 
     locationGroups.forEach((groupCamps, key) => {
       const [lat, lng] = key.split(",").map(Number);
-      const marker = L.marker([lat, lng], { icon: customIcon }).addTo(mapInstanceRef.current);
+      const marker = L.marker([lat, lng], { icon: customIcon }).addTo(
+        mapInstanceRef.current
+      );
 
       const campsList = groupCamps
         .slice(0, 10)
@@ -1385,7 +1616,12 @@ function CampMap({
         )
         .join("");
 
-      const moreText = groupCamps.length > 10 ? `<p style="font-size: 12px; color: #6B4423; text-align: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #F5EBE0;">+ ${groupCamps.length - 10} more camps</p>` : "";
+      const moreText =
+        groupCamps.length > 10
+          ? `<p style="font-size: 12px; color: #6B4423; text-align: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #F5EBE0;">+ ${
+              groupCamps.length - 10
+            } more camps</p>`
+          : "";
 
       const popupContent = `
         <div class="map-popup" style="min-width: 300px; font-family: 'DM Sans', system-ui, sans-serif;">
@@ -1397,13 +1633,17 @@ function CampMap({
         </div>
       `;
 
-      const popup = L.popup({ maxHeight: 350, minWidth: 300 }).setContent(popupContent);
+      const popup = L.popup({ maxHeight: 350, minWidth: 300 }).setContent(
+        popupContent
+      );
       marker.bindPopup(popup);
 
       marker.on("popupopen", () => {
         document.querySelectorAll(".popup-camp").forEach((el) => {
-          (el as HTMLElement).onmouseenter = () => (el as HTMLElement).style.background = '#F5EBE0';
-          (el as HTMLElement).onmouseleave = () => (el as HTMLElement).style.background = '#FAF5EF';
+          (el as HTMLElement).onmouseenter = () =>
+            ((el as HTMLElement).style.background = "#F5EBE0");
+          (el as HTMLElement).onmouseleave = () =>
+            ((el as HTMLElement).style.background = "#FAF5EF");
           el.addEventListener("click", () => {
             const campId = el.getAttribute("data-id");
             const camp = groupCamps.find((c) => c.catalogId === campId);
@@ -1411,8 +1651,10 @@ function CampMap({
           });
         });
         document.querySelectorAll(".popup-filter-btn").forEach((el) => {
-          (el as HTMLElement).onmouseenter = () => (el as HTMLElement).style.transform = 'scale(1.02)';
-          (el as HTMLElement).onmouseleave = () => (el as HTMLElement).style.transform = 'scale(1)';
+          (el as HTMLElement).onmouseenter = () =>
+            ((el as HTMLElement).style.transform = "scale(1.02)");
+          (el as HTMLElement).onmouseleave = () =>
+            ((el as HTMLElement).style.transform = "scale(1)");
           el.addEventListener("click", () => {
             const location = el.getAttribute("data-location");
             if (location) onFilterLocation(location);
@@ -1429,12 +1671,10 @@ function CampMap({
     }
   }, [camps, onSelect, onFilterLocation, mapReady]);
 
-  // User location marker
   useEffect(() => {
     const L = (window as any).L;
     if (!mapReady || !mapInstanceRef.current || !L) return;
 
-    // Remove existing user marker
     if (userMarkerRef.current) {
       userMarkerRef.current.remove();
       userMarkerRef.current = null;
@@ -1442,9 +1682,8 @@ function CampMap({
 
     if (!userLocation) return;
 
-    // Custom user location marker icon (blue/purple)
     const userIcon = L.divIcon({
-      className: 'user-marker',
+      className: "user-marker",
       html: `<div style="position: relative; width: 36px; height: 36px;">
         <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="18" cy="18" r="16" fill="#6366F1" stroke="#4F46E5" stroke-width="2"/>
@@ -1488,7 +1727,13 @@ function CampMap({
   );
 }
 
-function CampCalendar({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Camp) => void }) {
+function CampCalendar({
+  camps,
+  onSelect,
+}: {
+  camps: Camp[];
+  onSelect: (camp: Camp) => void;
+}) {
   const [collapsedWeeks, setCollapsedWeeks] = useState<Set<string>>(new Set());
 
   const toggleWeek = (dateRange: string) => {
@@ -1503,7 +1748,6 @@ function CampCalendar({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Cam
     });
   };
 
-  // Group camps by week (dateRange)
   const campsByWeek = useMemo(() => {
     const grouped = new Map<string, Camp[]>();
     camps.forEach((camp) => {
@@ -1512,23 +1756,13 @@ function CampCalendar({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Cam
       }
       grouped.get(camp.dateRange)!.push(camp);
     });
-    // Sort by start date
     return Array.from(grouped.entries()).sort((a, b) => {
       const campA = a[1][0];
       const campB = b[1][0];
-      return new Date(campA.startDate.iso).getTime() - new Date(campB.startDate.iso).getTime();
-    });
-  }, [camps]);
-
-  // Get all unique weeks from camps for display
-  const allWeeks = useMemo(() => {
-    const weeks = new Set<string>();
-    camps.forEach((camp) => weeks.add(camp.dateRange));
-    return Array.from(weeks).sort((a, b) => {
-      const campA = camps.find((c) => c.dateRange === a);
-      const campB = camps.find((c) => c.dateRange === b);
-      if (!campA || !campB) return 0;
-      return new Date(campA.startDate.iso).getTime() - new Date(campB.startDate.iso).getTime();
+      return (
+        new Date(campA.startDate.iso).getTime() -
+        new Date(campB.startDate.iso).getTime()
+      );
     });
   }, [camps]);
 
@@ -1539,7 +1773,9 @@ function CampCalendar({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Cam
           <div className="w-20 h-20 mx-auto mb-6 bg-camp-sand/50 rounded-2xl flex items-center justify-center text-camp-bark/30">
             {Icons.calendar}
           </div>
-          <h3 className="font-display text-xl font-bold text-camp-pine mb-2">No camps found</h3>
+          <h3 className="font-display text-xl font-bold text-camp-pine mb-2">
+            No camps found
+          </h3>
           <p className="text-camp-bark/60 text-sm">
             Try adjusting your filters to discover more adventures
           </p>
@@ -1551,13 +1787,15 @@ function CampCalendar({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Cam
   return (
     <div className="h-full overflow-y-auto p-4 sm:p-6 bg-gradient-to-b from-camp-cream to-camp-warm">
       <div className="max-w-6xl mx-auto">
-        {/* Calendar header */}
         <div className="mb-6 text-center">
-          <h2 className="font-display text-2xl font-bold text-camp-pine mb-2">Summer Schedule</h2>
-          <p className="text-camp-bark/60 text-sm">View camps by week to plan your summer</p>
+          <h2 className="font-display text-2xl font-bold text-camp-pine mb-2">
+            Summer Schedule
+          </h2>
+          <p className="text-camp-bark/60 text-sm">
+            View camps by week to plan your summer
+          </p>
         </div>
 
-        {/* Week rows */}
         <div className="space-y-4">
           {campsByWeek.map(([dateRange, weekCamps], weekIndex) => {
             const firstCamp = weekCamps[0];
@@ -1566,84 +1804,97 @@ function CampCalendar({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Cam
             return (
               <div
                 key={dateRange}
-                className={`bg-white rounded-2xl shadow-camp overflow-hidden animate-slide-up opacity-0 stagger-${Math.min(weekIndex + 1, 6)}`}
-                style={{ animationFillMode: 'forwards' }}
+                className={`bg-white rounded-2xl shadow-camp overflow-hidden animate-slide-up opacity-0 stagger-${Math.min(
+                  weekIndex + 1,
+                  6
+                )}`}
+                style={{ animationFillMode: "forwards" }}
               >
-                {/* Week header */}
                 <button
                   onClick={() => toggleWeek(dateRange)}
                   className="w-full bg-gradient-to-r from-camp-forest to-camp-forest-light px-4 sm:px-6 py-3 flex items-center justify-between cursor-pointer hover:from-camp-forest-light hover:to-camp-forest transition-all"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                      <span className="text-white font-display font-bold text-lg">{weekStart.day}</span>
+                      <span className="text-white font-display font-bold text-lg">
+                        {weekStart.day}
+                      </span>
                     </div>
                     <div className="text-left">
                       <h3 className="font-display font-bold text-white">
-                        {weekStart.monthName} {weekStart.day} - {firstCamp.endDate.monthName} {firstCamp.endDate.day}
+                        {weekStart.monthName} {weekStart.day} -{" "}
+                        {firstCamp.endDate.monthName} {firstCamp.endDate.day}
                       </h3>
-                      <p className="text-white/70 text-xs">Week of {weekStart.monthName} {weekStart.day}</p>
+                      <p className="text-white/70 text-xs">
+                        Week of {weekStart.monthName} {weekStart.day}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="bg-white/20 px-3 py-1 rounded-full">
-                      <span className="text-white text-sm font-semibold">{weekCamps.length} camps</span>
+                      <span className="text-white text-sm font-semibold">
+                        {weekCamps.length} camps
+                      </span>
                     </div>
                     <ChevronDown
-                      className={`w-5 h-5 text-white transition-transform ${collapsedWeeks.has(dateRange) ? '-rotate-90' : ''}`}
+                      className={`w-5 h-5 text-white transition-transform ${
+                        collapsedWeeks.has(dateRange) ? "-rotate-90" : ""
+                      }`}
                     />
                   </div>
                 </button>
 
-                {/* Camp cards for this week */}
                 {!collapsedWeeks.has(dateRange) && (
-                <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                  {weekCamps.map((camp, i) => {
-                    const style = getCategoryStyle(camp.category);
-                    return (
-                      <div
-                        key={`${camp.catalogId}-${i}`}
-                        onClick={() => onSelect(camp)}
-                        className="group bg-camp-warm hover:bg-camp-sand rounded-xl p-3 cursor-pointer transition-all hover:shadow-camp border border-transparent hover:border-camp-terracotta/20"
-                      >
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <h4 className="font-semibold text-camp-pine text-sm leading-tight group-hover:text-camp-terracotta transition-colors line-clamp-2">
-                            {camp.title}
-                          </h4>
-                          <span className="flex-shrink-0 px-2 py-0.5 bg-camp-terracotta text-white text-xs font-bold rounded">
-                            ${camp.fee}
+                  <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    {weekCamps.map((camp, i) => {
+                      const style = getCategoryStyle(camp.category);
+                      return (
+                        <div
+                          key={`${camp.catalogId}-${i}`}
+                          onClick={() => onSelect(camp)}
+                          className="group bg-camp-warm hover:bg-camp-sand rounded-xl p-3 cursor-pointer transition-all hover:shadow-camp border border-transparent hover:border-camp-terracotta/20"
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <h4 className="font-semibold text-camp-pine text-sm leading-tight group-hover:text-camp-terracotta transition-colors line-clamp-2">
+                              {camp.title}
+                            </h4>
+                            <span className="flex-shrink-0 px-2 py-0.5 bg-camp-terracotta text-white text-xs font-bold rounded">
+                              ${camp.fee}
+                            </span>
+                          </div>
+                          <span
+                            className={`inline-block px-2 py-0.5 ${style.bg} ${style.text} text-[10px] font-bold uppercase tracking-wider rounded mb-2`}
+                          >
+                            {camp.category}
                           </span>
+                          <div className="flex items-center gap-3 text-xs text-camp-bark/60">
+                            <span className="flex items-center gap-1">
+                              {Icons.clock}
+                              {camp.startTime.formatted}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              {Icons.user}
+                              {camp.minAge}-{camp.maxAge}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex items-center gap-1 text-xs text-camp-bark/50">
+                            {Icons.location}
+                            <span className="truncate">{camp.location}</span>
+                          </div>
                         </div>
-                        <span className={`inline-block px-2 py-0.5 ${style.bg} ${style.text} text-[10px] font-bold uppercase tracking-wider rounded mb-2`}>
-                          {camp.category}
-                        </span>
-                        <div className="flex items-center gap-3 text-xs text-camp-bark/60">
-                          <span className="flex items-center gap-1">
-                            {Icons.clock}
-                            {camp.startTime.formatted}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            {Icons.user}
-                            {camp.minAge}-{camp.maxAge}
-                          </span>
-                        </div>
-                        <div className="mt-2 flex items-center gap-1 text-xs text-camp-bark/50">
-                          {Icons.location}
-                          <span className="truncate">{camp.location}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             );
           })}
         </div>
 
-        {/* Summary footer */}
         <div className="mt-8 text-center text-camp-bark/50 text-sm">
-          <p>{camps.length} camps across {campsByWeek.length} weeks</p>
+          <p>
+            {camps.length} camps across {campsByWeek.length} weeks
+          </p>
         </div>
       </div>
     </div>
@@ -1660,7 +1911,15 @@ interface MultiWeekPlannerProps {
   onSaveSharedPlan: () => void;
 }
 
-function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect, isSharedPlan, onSaveSharedPlan }: MultiWeekPlannerProps) {
+function MultiWeekPlanner({
+  camps,
+  allCamps,
+  plannedCamps,
+  onPlanCamp,
+  onSelect,
+  isSharedPlan,
+  onSaveSharedPlan,
+}: MultiWeekPlannerProps) {
   const [expandedWeek, setExpandedWeek] = useState<string | null>(null);
   const [plannerSearch, setPlannerSearch] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
@@ -1681,7 +1940,6 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
       const input = document.createElement("input");
       input.value = link;
       document.body.appendChild(input);
@@ -1693,9 +1951,11 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
     }
   };
 
-  // Get all unique weeks from ALL camps (not just filtered) sorted chronologically
   const allWeeks = useMemo(() => {
-    const weekMap = new Map<string, { dateRange: string; startDate: ParsedDate; endDate: ParsedDate }>();
+    const weekMap = new Map<
+      string,
+      { dateRange: string; startDate: ParsedDate; endDate: ParsedDate }
+    >();
     allCamps.forEach((camp) => {
       if (!weekMap.has(camp.dateRange)) {
         weekMap.set(camp.dateRange, {
@@ -1706,11 +1966,12 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
       }
     });
     return Array.from(weekMap.values()).sort(
-      (a, b) => new Date(a.startDate.iso).getTime() - new Date(b.startDate.iso).getTime()
+      (a, b) =>
+        new Date(a.startDate.iso).getTime() -
+        new Date(b.startDate.iso).getTime()
     );
   }, [allCamps]);
 
-  // Get camps available for each week (from filtered camps)
   const campsByWeek = useMemo(() => {
     const grouped = new Map<string, Camp[]>();
     camps.forEach((camp) => {
@@ -1722,7 +1983,6 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
     return grouped;
   }, [camps]);
 
-  // Calculate totals
   const totalCost = useMemo(() => {
     let total = 0;
     plannedCamps.forEach((camp) => {
@@ -1732,7 +1992,9 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
   }, [plannedCamps]);
 
   const weeksPlanned = plannedCamps.size;
-  const weeksCovered = allWeeks.filter((w) => plannedCamps.has(w.dateRange)).length;
+  const weeksCovered = allWeeks.filter((w) =>
+    plannedCamps.has(w.dateRange)
+  ).length;
   const weeksWithGaps = allWeeks.length - weeksCovered;
 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -1741,12 +2003,18 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
     setIsGeneratingPDF(true);
     try {
       const blob = await pdf(
-        <PlannerPDF weeks={allWeeks} plannedCamps={plannedCamps} totalCost={totalCost} />
+        <PlannerPDF
+          weeks={allWeeks}
+          plannedCamps={plannedCamps}
+          totalCost={totalCost}
+        />
       ).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `summer-camp-plan-${new Date().toISOString().split("T")[0]}.pdf`;
+      link.download = `summer-camp-plan-${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -1761,7 +2029,6 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
   return (
     <div className="h-full overflow-y-auto p-4 sm:p-6 bg-gradient-to-b from-camp-cream to-camp-warm">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="mb-6 text-center">
           <h2 className="font-display text-2xl font-bold text-camp-pine mb-2">
             {isSharedPlan ? "Shared Plan" : "Summer Planner"}
@@ -1773,7 +2040,6 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
           </p>
         </div>
 
-        {/* Shared Plan Banner */}
         {isSharedPlan && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 print:hidden">
             <div className="flex items-start gap-3">
@@ -1782,7 +2048,8 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
               </div>
               <div className="flex-1">
                 <p className="text-amber-800 text-sm font-medium mb-2">
-                  You're viewing a shared plan. Changes won't be saved.
+                  You&apos;re viewing a shared plan. Changes won&apos;t be
+                  saved.
                 </p>
                 <button
                   onClick={onSaveSharedPlan}
@@ -1795,19 +2062,26 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
           </div>
         )}
 
-        {/* Summary Card */}
         <div className="bg-white rounded-2xl shadow-camp p-4 sm:p-6 mb-6 print:shadow-none print:border print:border-gray-200">
           <div className="grid grid-cols-3 gap-4 text-center mb-4">
             <div>
-              <div className="text-2xl sm:text-3xl font-display font-bold text-camp-forest">{weeksPlanned}</div>
+              <div className="text-2xl sm:text-3xl font-display font-bold text-camp-forest">
+                {weeksPlanned}
+              </div>
               <div className="text-xs text-camp-bark/60">Weeks Planned</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-display font-bold text-camp-terracotta">${totalCost}</div>
+              <div className="text-2xl sm:text-3xl font-display font-bold text-camp-terracotta">
+                ${totalCost}
+              </div>
               <div className="text-xs text-camp-bark/60">Total Cost</div>
             </div>
             <div>
-              <div className={`text-2xl sm:text-3xl font-display font-bold ${weeksWithGaps > 0 ? 'text-amber-500' : 'text-camp-forest'}`}>
+              <div
+                className={`text-2xl sm:text-3xl font-display font-bold ${
+                  weeksWithGaps > 0 ? "text-amber-500" : "text-camp-forest"
+                }`}
+              >
                 {weeksWithGaps}
               </div>
               <div className="text-xs text-camp-bark/60">Weeks with Gaps</div>
@@ -1857,7 +2131,6 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
           )}
         </div>
 
-        {/* Week Grid */}
         <div className="space-y-3">
           {allWeeks.map((week, i) => {
             const plannedCamp = plannedCamps.get(week.dateRange);
@@ -1868,37 +2141,48 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
             return (
               <div
                 key={week.dateRange}
-                className={`bg-white rounded-2xl shadow-camp overflow-hidden transition-all animate-slide-up opacity-0 stagger-${Math.min(i + 1, 6)} print:shadow-none print:border print:border-gray-200`}
-                style={{ animationFillMode: 'forwards' }}
+                className={`bg-white rounded-2xl shadow-camp overflow-hidden transition-all animate-slide-up opacity-0 stagger-${Math.min(
+                  i + 1,
+                  6
+                )} print:shadow-none print:border print:border-gray-200`}
+                style={{ animationFillMode: "forwards" }}
               >
-                {/* Week Row */}
                 <div
                   className={`px-4 py-3 flex items-center justify-between gap-3 ${
-                    plannedCamp ? 'bg-camp-forest/5' : ''
+                    plannedCamp ? "bg-camp-forest/5" : ""
                   }`}
                 >
-                  {/* Week info */}
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      plannedCamp ? 'bg-camp-forest text-white' : 'bg-camp-sand text-camp-bark/50'
-                    }`}>
-                      <span className="font-display font-bold text-sm">{week.startDate.day}</span>
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        plannedCamp
+                          ? "bg-camp-forest text-white"
+                          : "bg-camp-sand text-camp-bark/50"
+                      }`}
+                    >
+                      <span className="font-display font-bold text-sm">
+                        {week.startDate.day}
+                      </span>
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-semibold text-camp-pine text-sm truncate">
-                        {week.startDate.monthName} {week.startDate.day} - {week.endDate.monthName} {week.endDate.day}
+                        {week.startDate.monthName} {week.startDate.day} -{" "}
+                        {week.endDate.monthName} {week.endDate.day}
                       </h3>
                       {plannedCamp ? (
-                        <p className="text-xs text-camp-forest font-medium truncate">{plannedCamp.title}</p>
+                        <p className="text-xs text-camp-forest font-medium truncate">
+                          {plannedCamp.title}
+                        </p>
                       ) : (
                         <p className="text-xs text-camp-bark/50">
-                          {hasAvailableCamps ? `${availableCamps.length} camps available` : 'No camps match filters'}
+                          {hasAvailableCamps
+                            ? `${availableCamps.length} camps available`
+                            : "No camps match filters"}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {plannedCamp && (
                       <span className="px-2 py-1 bg-camp-terracotta text-white text-xs font-bold rounded print:bg-gray-100 print:text-gray-800">
@@ -1921,7 +2205,7 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
                         }}
                         className="px-3 py-1.5 bg-camp-forest text-white text-xs font-semibold rounded-lg hover:bg-camp-pine transition-colors print:hidden"
                       >
-                        {isExpanded ? 'Close' : 'Select'}
+                        {isExpanded ? "Close" : "Select"}
                       </button>
                     ) : (
                       <span className="px-3 py-1.5 bg-camp-sand text-camp-bark/40 text-xs font-medium rounded-lg print:hidden">
@@ -1931,105 +2215,113 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
                   </div>
                 </div>
 
-                {/* Expanded camp selection */}
-                {isExpanded && hasAvailableCamps && (() => {
-                  const searchLower = plannerSearch.toLowerCase();
-                  const filteredCamps = plannerSearch
-                    ? availableCamps.filter((c) =>
-                        c.title.toLowerCase().includes(searchLower) ||
-                        c.category.toLowerCase().includes(searchLower) ||
-                        c.location.toLowerCase().includes(searchLower)
-                      )
-                    : availableCamps;
+                {isExpanded &&
+                  hasAvailableCamps &&
+                  (() => {
+                    const searchLower = plannerSearch.toLowerCase();
+                    const filteredCamps = plannerSearch
+                      ? availableCamps.filter(
+                          (c) =>
+                            c.title.toLowerCase().includes(searchLower) ||
+                            c.category.toLowerCase().includes(searchLower) ||
+                            c.location.toLowerCase().includes(searchLower)
+                        )
+                      : availableCamps;
 
-                  return (
-                    <div className="border-t border-camp-sand p-3 bg-camp-warm/50 print:hidden">
-                      {/* Search input */}
-                      <div className="relative mb-3">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-camp-bark/40">
-                          {Icons.search}
+                    return (
+                      <div className="border-t border-camp-sand p-3 bg-camp-warm/50 print:hidden">
+                        <div className="relative mb-3">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-camp-bark/40">
+                            {Icons.search}
+                          </div>
+                          <input
+                            type="text"
+                            placeholder="Search camps..."
+                            value={plannerSearch}
+                            onChange={(e) => setPlannerSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-white border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30 focus:border-camp-terracotta/50"
+                          />
                         </div>
-                        <input
-                          type="text"
-                          placeholder="Search camps..."
-                          value={plannerSearch}
-                          onChange={(e) => setPlannerSearch(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2 bg-white border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30 focus:border-camp-terracotta/50"
-                        />
-                      </div>
 
-                      {filteredCamps.length === 0 ? (
-                        <div className="text-center py-4 text-camp-bark/50 text-sm">
-                          No camps match "{plannerSearch}"
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-                          {filteredCamps.map((camp, j) => {
-                            const style = getCategoryStyle(camp.category);
-                            return (
-                              <div
-                                key={`${camp.catalogId}-${j}`}
-                                className="bg-white rounded-xl p-3 border border-camp-sand hover:border-camp-terracotta/30 transition-all"
-                              >
-                                <div className="flex items-start justify-between gap-2 mb-2">
-                                  <h4
-                                    onClick={() => onSelect(camp)}
-                                    className="font-semibold text-camp-pine text-sm leading-tight cursor-pointer hover:text-camp-terracotta transition-colors line-clamp-2"
-                                  >
-                                    {camp.title}
-                                  </h4>
-                                  <span className="flex-shrink-0 px-2 py-0.5 bg-camp-terracotta text-white text-xs font-bold rounded">
-                                    ${camp.fee}
-                                  </span>
-                                </div>
-                                <span className={`inline-block px-2 py-0.5 ${style.bg} ${style.text} text-[10px] font-bold uppercase tracking-wider rounded mb-2`}>
-                                  {camp.category}
-                                </span>
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2 text-xs text-camp-bark/60">
-                                    <span className="flex items-center gap-1">
-                                      {Icons.clock}
-                                      {camp.startTime.formatted}
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      {Icons.user}
-                                      {camp.minAge}-{camp.maxAge}
+                        {filteredCamps.length === 0 ? (
+                          <div className="text-center py-4 text-camp-bark/50 text-sm">
+                            No camps match &quot;{plannerSearch}&quot;
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                            {filteredCamps.map((camp, j) => {
+                              const style = getCategoryStyle(camp.category);
+                              return (
+                                <div
+                                  key={`${camp.catalogId}-${j}`}
+                                  className="bg-white rounded-xl p-3 border border-camp-sand hover:border-camp-terracotta/30 transition-all"
+                                >
+                                  <div className="flex items-start justify-between gap-2 mb-2">
+                                    <h4
+                                      onClick={() => onSelect(camp)}
+                                      className="font-semibold text-camp-pine text-sm leading-tight cursor-pointer hover:text-camp-terracotta transition-colors line-clamp-2"
+                                    >
+                                      {camp.title}
+                                    </h4>
+                                    <span className="flex-shrink-0 px-2 py-0.5 bg-camp-terracotta text-white text-xs font-bold rounded">
+                                      ${camp.fee}
                                     </span>
                                   </div>
-                                  <button
-                                    onClick={() => {
-                                      onPlanCamp(week.dateRange, camp);
-                                      setExpandedWeek(null);
-                                      setPlannerSearch("");
-                                    }}
-                                    className="px-2 py-1 bg-camp-forest text-white text-xs font-semibold rounded hover:bg-camp-pine transition-colors"
+                                  <span
+                                    className={`inline-block px-2 py-0.5 ${style.bg} ${style.text} text-[10px] font-bold uppercase tracking-wider rounded mb-2`}
                                   >
-                                    Add
-                                  </button>
+                                    {camp.category}
+                                  </span>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-xs text-camp-bark/60">
+                                      <span className="flex items-center gap-1">
+                                        {Icons.clock}
+                                        {camp.startTime.formatted}
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        {Icons.user}
+                                        {camp.minAge}-{camp.maxAge}
+                                      </span>
+                                    </div>
+                                    <button
+                                      onClick={() => {
+                                        onPlanCamp(week.dateRange, camp);
+                                        setExpandedWeek(null);
+                                        setPlannerSearch("");
+                                      }}
+                                      className="px-2 py-1 bg-camp-forest text-white text-xs font-semibold rounded hover:bg-camp-pine transition-colors"
+                                    >
+                                      Add
+                                    </button>
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
               </div>
             );
           })}
         </div>
 
-        {/* Print-only summary */}
         <div className="hidden print:block mt-8 pt-4 border-t border-gray-200">
-          <h3 className="font-display font-bold text-lg mb-2">Planned Camps Summary</h3>
+          <h3 className="font-display font-bold text-lg mb-2">
+            Planned Camps Summary
+          </h3>
           <ul className="space-y-1 text-sm">
             {allWeeks.map((week) => {
               const camp = plannedCamps.get(week.dateRange);
               return (
                 <li key={week.dateRange} className="flex justify-between">
-                  <span>{week.startDate.monthName} {week.startDate.day}:</span>
-                  <span className="font-medium">{camp ? `${camp.title} - $${camp.fee}` : '—'}</span>
+                  <span>
+                    {week.startDate.monthName} {week.startDate.day}:
+                  </span>
+                  <span className="font-medium">
+                    {camp ? `${camp.title} - $${camp.fee}` : "—"}
+                  </span>
                 </li>
               );
             })}
@@ -2040,21 +2332,28 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
           </div>
         </div>
 
-        {/* Footer */}
         <div className="mt-8 text-center text-camp-bark/50 text-sm print:hidden">
-          <p>{allWeeks.length} weeks of summer · {camps.length} camps available with current filters</p>
+          <p>
+            {allWeeks.length} weeks of summer · {camps.length} camps available
+            with current filters
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-function ModalMap({ coordinates, location }: { coordinates: { lat: number; lng: number }; location: string }) {
+function ModalMap({
+  coordinates,
+  location,
+}: {
+  coordinates: { lat: number; lng: number };
+  location: string;
+}) {
   const mapRef = React.useRef<HTMLDivElement>(null);
   const mapInstanceRef = React.useRef<any>(null);
   const [leafletReady, setLeafletReady] = useState(false);
 
-  // Load Leaflet if not already loaded
   useEffect(() => {
     const L = (window as any).L;
     if (L) {
@@ -2073,12 +2372,10 @@ function ModalMap({ coordinates, location }: { coordinates: { lat: number; lng: 
     }
   }, []);
 
-  // Initialize map once Leaflet is ready
   useEffect(() => {
     const L = (window as any).L;
     if (!leafletReady || !L || !mapRef.current) return;
 
-    // Clean up existing map if any
     if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
@@ -2089,10 +2386,12 @@ function ModalMap({ coordinates, location }: { coordinates: { lat: number; lng: 
       attributionControl: false,
     }).setView([coordinates.lat, coordinates.lng], 14);
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png").addTo(map);
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+    ).addTo(map);
 
     const customIcon = L.divIcon({
-      className: 'custom-marker',
+      className: "custom-marker",
       html: `<div style="position: relative; width: 40px; height: 48px;">
         <svg width="40" height="48" viewBox="0 0 40 48" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M20 0C8.954 0 0 8.954 0 20c0 14.667 20 28 20 28s20-13.333 20-28C40 8.954 31.046 0 20 0z" fill="#1B4332"/>
@@ -2106,11 +2405,12 @@ function ModalMap({ coordinates, location }: { coordinates: { lat: number; lng: 
       iconAnchor: [20, 48],
     });
 
-    L.marker([coordinates.lat, coordinates.lng], { icon: customIcon }).addTo(map);
+    L.marker([coordinates.lat, coordinates.lng], { icon: customIcon }).addTo(
+      map
+    );
 
     mapInstanceRef.current = map;
 
-    // Force map to recalculate size after modal animation
     setTimeout(() => {
       map.invalidateSize();
     }, 100);
@@ -2139,7 +2439,13 @@ function ModalMap({ coordinates, location }: { coordinates: { lat: number; lng: 
   );
 }
 
-function CampModal({ camp, onClose }: { camp: Camp; onClose: () => void }) {
+function CampModal({
+  camp,
+  onClose,
+}: {
+  camp: Camp;
+  onClose: () => void;
+}) {
   const style = getCategoryStyle(camp.category);
 
   return (
@@ -2151,15 +2457,17 @@ function CampModal({ camp, onClose }: { camp: Camp; onClose: () => void }) {
         className="bg-white rounded-t-3xl sm:rounded-3xl max-w-xl w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto shadow-camp-lg animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Decorative header */}
         <div className="h-2 bg-gradient-to-r from-camp-terracotta via-camp-sun to-camp-forest rounded-t-3xl" />
 
-        {/* Header */}
         <div className="p-4 sm:p-6 pb-4 border-b border-camp-sand">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <h2 className="font-display text-xl sm:text-2xl font-bold text-camp-pine mb-2">{camp.title}</h2>
-              <span className={`inline-block px-3 py-1 ${style.bg} ${style.text} text-xs font-bold uppercase tracking-wider rounded-lg`}>
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-camp-pine mb-2">
+                {camp.title}
+              </h2>
+              <span
+                className={`inline-block px-3 py-1 ${style.bg} ${style.text} text-xs font-bold uppercase tracking-wider rounded-lg`}
+              >
                 {camp.category}
               </span>
             </div>
@@ -2172,14 +2480,16 @@ function CampModal({ camp, onClose }: { camp: Camp; onClose: () => void }) {
           </div>
         </div>
 
-        {/* Body */}
         <div className="p-4 sm:p-6">
-          {/* Price highlight */}
           <div className="bg-gradient-to-br from-camp-terracotta to-camp-terracotta-dark rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white/80 text-sm font-medium mb-1">Camp Fee</p>
-                <p className="text-3xl sm:text-4xl font-display font-bold">${camp.fee}</p>
+                <p className="text-white/80 text-sm font-medium mb-1">
+                  Camp Fee
+                </p>
+                <p className="text-3xl sm:text-4xl font-display font-bold">
+                  ${camp.fee}
+                </p>
               </div>
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-2xl flex items-center justify-center">
                 {Icons.sparkles}
@@ -2187,36 +2497,49 @@ function CampModal({ camp, onClose }: { camp: Camp; onClose: () => void }) {
             </div>
           </div>
 
-          {/* Details grid */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div className="bg-camp-warm rounded-xl p-3 sm:p-4">
               <div className="flex items-center gap-2 mb-1 sm:mb-2 text-camp-terracotta">
                 {Icons.location}
-                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-camp-bark/50">Location</span>
+                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-camp-bark/50">
+                  Location
+                </span>
               </div>
-              <p className="font-semibold text-camp-pine text-sm sm:text-base">{camp.location}</p>
-              <p className="text-xs sm:text-sm text-camp-bark/60">{camp.community}</p>
+              <p className="font-semibold text-camp-pine text-sm sm:text-base">
+                {camp.location}
+              </p>
+              <p className="text-xs sm:text-sm text-camp-bark/60">
+                {camp.community}
+              </p>
             </div>
 
             <div className="bg-camp-warm rounded-xl p-3 sm:p-4">
               <div className="flex items-center gap-2 mb-1 sm:mb-2 text-camp-bark/50">
                 {Icons.user}
-                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">Ages</span>
+                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
+                  Ages
+                </span>
               </div>
-              <p className="font-semibold text-camp-pine text-sm sm:text-base">{camp.minAge} - {camp.maxAge} years</p>
+              <p className="font-semibold text-camp-pine text-sm sm:text-base">
+                {camp.minAge} - {camp.maxAge} years
+              </p>
             </div>
 
             <div className="bg-camp-warm rounded-xl p-3 sm:p-4">
               <div className="flex items-center gap-2 mb-1 sm:mb-2 text-camp-forest">
                 {Icons.calendar}
-                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-camp-bark/50">Dates</span>
+                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-camp-bark/50">
+                  Dates
+                </span>
               </div>
               <p className="font-semibold text-camp-pine text-sm sm:text-base">
-                {camp.startDate.dayName}, {camp.startDate.monthName} {camp.startDate.day}
+                {camp.startDate.dayName}, {camp.startDate.monthName}{" "}
+                {camp.startDate.day}
               </p>
               {camp.durationDays > 1 && (
                 <p className="text-xs sm:text-sm text-camp-bark/60">
-                  to {camp.endDate.dayName}, {camp.endDate.monthName} {camp.endDate.day}
+                  to {camp.endDate.dayName}, {camp.endDate.monthName}{" "}
+                  {camp.endDate.day}
                 </p>
               )}
             </div>
@@ -2224,21 +2547,23 @@ function CampModal({ camp, onClose }: { camp: Camp; onClose: () => void }) {
             <div className="bg-camp-warm rounded-xl p-3 sm:p-4">
               <div className="flex items-center gap-2 mb-1 sm:mb-2 text-camp-sun">
                 {Icons.clock}
-                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-camp-bark/50">Time</span>
+                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-camp-bark/50">
+                  Time
+                </span>
               </div>
               <p className="font-semibold text-camp-pine text-sm sm:text-base">
                 {camp.startTime.formatted} - {camp.endTime.formatted}
               </p>
-              <p className="text-xs sm:text-sm text-camp-bark/60">{camp.durationHours} hours</p>
+              <p className="text-xs sm:text-sm text-camp-bark/60">
+                {camp.durationHours} hours
+              </p>
             </div>
           </div>
 
-          {/* Location Map */}
           {camp.coordinates && (
             <ModalMap coordinates={camp.coordinates} location={camp.location} />
           )}
 
-          {/* Status & Catalog */}
           <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 text-sm">
             <div className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg font-medium">
               {camp.status}
@@ -2247,26 +2572,8 @@ function CampModal({ camp, onClose }: { camp: Camp; onClose: () => void }) {
               ID: <span className="font-mono text-camp-bark">{camp.catalogId}</span>
             </div>
           </div>
-
-          {/* Register button - hidden for now */}
-          {false && (
-            <a
-              href="https://www.fairfaxcounty.gov/parks/camps"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full py-4 bg-camp-forest hover:bg-camp-pine text-white text-center font-bold rounded-xl transition-colors shadow-camp hover:shadow-camp-lg"
-            >
-              Register on FCPA Website
-            </a>
-          )}
         </div>
       </div>
     </div>
   );
 }
-
-const root = createRoot(document.getElementById("root")!);
-root.render(<App />);
-
-// Initialize Vercel Analytics
-inject();

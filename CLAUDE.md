@@ -6,10 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Install dependencies
-bun install
+npm install
 
-# Run development server with hot reload (port 3002)
-bun run dev
+# Run development server (port 3000)
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm run start
 
 # Convert XLSX camp data to JSON (with geocoding)
 bun xlsx-to-json.ts data/FCPA\ Camp\ Spreadsheet.xlsx data/fcpa-camps.json
@@ -17,18 +23,19 @@ bun xlsx-to-json.ts data/FCPA\ Camp\ Spreadsheet.xlsx data/fcpa-camps.json
 
 ## Architecture
 
-This is a Fairfax County Parks summer camp explorer - a React SPA with a Bun backend.
+This is a Fairfax County Parks summer camp explorer built with Next.js 15 (App Router).
 
 ### Data Flow
 1. **Source**: `data/FCPA Camp Spreadsheet.xlsx` - raw camp data from FCPA
 2. **Conversion**: `xlsx-to-json.ts` parses the XLSX, infers types (dates, times, ages, fees), geocodes locations via Nominatim (cached in `data/.geocode-cache.json`), and outputs structured JSON
-3. **API**: `index.ts` serves `data/fcpa-camps.json` at `/api/camps`
-4. **Frontend**: `frontend.tsx` fetches and renders camps with filtering
+3. **API**: `/app/api/camps/route.ts` serves `data/fcpa-camps.json` at `/api/camps`
+4. **Frontend**: `/app/page.tsx` is a client component that fetches and renders camps with filtering
 
 ### Key Files
-- `index.ts` - Bun server with HTML import and API route
-- `frontend.tsx` - Single-file React app (~900 lines) with all components inline
-- `index.html` - Entry point with Tailwind CDN config and custom CSS
+- `app/layout.tsx` - Root layout with metadata, fonts, and Vercel Analytics
+- `app/page.tsx` - Main client component with all camp explorer UI (~2000 lines)
+- `app/globals.css` - Tailwind CSS and custom styles
+- `app/api/camps/route.ts` - API route serving camp data
 - `xlsx-to-json.ts` - Data pipeline with geocoding and type inference
 - `data/location-addresses.json` - Manual address mappings for geocoding failures
 
@@ -36,10 +43,12 @@ This is a Fairfax County Parks summer camp explorer - a React SPA with a Bun bac
 - Filter state persists to URL params (`q`, `cat`, `comm`, `loc`, `week`, `minAge`, `maxAge`, `maxFee`, `view`)
 - Map uses Leaflet loaded dynamically from CDN
 - Custom marker icons rendered as inline SVG
+- Favorites and user location stored in localStorage
 
-## Bun-Specific
+## Next.js Specifics
 
-- Use `Bun.serve()` with routes and HTML imports (not Express or Vite)
-- Use `Bun.file()` for file I/O
-- Bun automatically loads `.env` files
-- Run tests with `bun test`
+- Uses App Router with Turbopack for development
+- The main page is a client component (`"use client"`) due to browser API usage
+- API routes use the new Route Handlers format
+- Tailwind CSS configured via `tailwind.config.ts`
+- Static assets go in `/public`

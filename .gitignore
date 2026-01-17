@@ -1,7 +1,11 @@
-# dependencies (bun install)
+# dependencies
 node_modules
 
-# output
+# Next.js
+.next
+
+# Legacy Bun files (not part of Next.js build)
+_legacy
 out
 dist
 *.tgz
