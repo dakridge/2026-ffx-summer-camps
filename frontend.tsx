@@ -16,6 +16,7 @@ import {
   ChevronDown,
   Sparkles,
   Users,
+  SlidersHorizontal,
 } from "lucide-react";
 
 interface ParsedDate {
@@ -163,6 +164,7 @@ const Icons = {
   dollar: <DollarSign className="w-4 h-4" strokeWidth={2} />,
   chevronDown: <ChevronDown className="w-4 h-4" strokeWidth={2} />,
   sparkles: <Sparkles className="w-5 h-5" fill="currentColor" strokeWidth={0} />,
+  filter: <SlidersHorizontal className="w-5 h-5" strokeWidth={2} />,
 };
 
 function App() {
@@ -177,7 +179,7 @@ function App() {
     return params.get("view") === "map" ? "map" : "list";
   });
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const params = filtersToParams(filters);
@@ -256,8 +258,21 @@ function App() {
 
   return (
     <div className="h-screen flex bg-camp-cream overflow-hidden">
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-80' : 'w-0'} bg-white border-r border-camp-sand flex-shrink-0 flex flex-col transition-all duration-300 overflow-hidden relative`}>
+      <aside className={`
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
+        w-80 bg-white border-r border-camp-sand flex-shrink-0 flex flex-col
+        transition-transform duration-300 ease-in-out
+      `}>
         {/* Decorative top bar */}
         <div className="h-1.5 bg-gradient-to-r from-camp-terracotta via-camp-sun to-camp-forest" />
 
@@ -266,14 +281,22 @@ function App() {
           <div className="absolute -top-6 -right-6 w-24 h-24 bg-camp-sun/10 rounded-full" />
           <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-camp-forest/5 rounded-full" />
           <div className="relative">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-camp-terracotta to-camp-terracotta-dark rounded-xl flex items-center justify-center text-white shadow-camp">
-                {Icons.tent}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-camp-terracotta to-camp-terracotta-dark rounded-xl flex items-center justify-center text-white shadow-camp">
+                  {Icons.tent}
+                </div>
+                <div>
+                  <h1 className="font-display text-xl font-bold text-camp-pine tracking-tight">Camp Explorer</h1>
+                  <p className="text-xs text-camp-bark/60 font-medium">Fairfax County Parks</p>
+                </div>
               </div>
-              <div>
-                <h1 className="font-display text-xl font-bold text-camp-pine tracking-tight">Camp Explorer</h1>
-                <p className="text-xs text-camp-bark/60 font-medium">Fairfax County Parks</p>
-              </div>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 hover:bg-camp-warm rounded-lg transition-colors text-camp-bark/50 hover:text-camp-bark lg:hidden"
+              >
+                {Icons.x}
+              </button>
             </div>
             <p className="text-sm text-camp-bark/70 mt-3">
               Discover the perfect summer adventure for your child
@@ -535,17 +558,20 @@ function App() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Toolbar */}
-        <div className="bg-white border-b border-camp-sand px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="bg-white border-b border-camp-sand px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-camp-warm rounded-lg transition-colors text-camp-bark/60 hover:text-camp-bark lg:hidden"
+              className="relative p-2 hover:bg-camp-warm rounded-lg transition-colors text-camp-bark/60 hover:text-camp-bark lg:hidden"
             >
-              {Icons.list}
+              {Icons.filter}
+              {hasActiveFilters && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-camp-terracotta rounded-full" />
+              )}
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-display font-bold text-camp-terracotta">{filteredCamps.length}</span>
-              <span className="text-camp-bark/60 text-sm">
+              <span className="text-xl sm:text-2xl font-display font-bold text-camp-terracotta">{filteredCamps.length}</span>
+              <span className="text-camp-bark/60 text-xs sm:text-sm">
                 {filteredCamps.length === 1 ? "camp" : "camps"} found
               </span>
             </div>
@@ -913,21 +939,21 @@ function CampModal({ camp, onClose }: { camp: Camp; onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 bg-camp-pine/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
+      className="fixed inset-0 bg-camp-pine/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4 animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-camp-lg animate-scale-in"
+        className="bg-white rounded-t-3xl sm:rounded-3xl max-w-xl w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto shadow-camp-lg animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Decorative header */}
         <div className="h-2 bg-gradient-to-r from-camp-terracotta via-camp-sun to-camp-forest rounded-t-3xl" />
 
         {/* Header */}
-        <div className="p-6 pb-4 border-b border-camp-sand">
+        <div className="p-4 sm:p-6 pb-4 border-b border-camp-sand">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <h2 className="font-display text-2xl font-bold text-camp-pine mb-2">{camp.title}</h2>
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-camp-pine mb-2">{camp.title}</h2>
               <span className={`inline-block px-3 py-1 ${style.bg} ${style.text} text-xs font-bold uppercase tracking-wider rounded-lg`}>
                 {camp.category}
               </span>
@@ -942,63 +968,63 @@ function CampModal({ camp, onClose }: { camp: Camp; onClose: () => void }) {
         </div>
 
         {/* Body */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Price highlight */}
-          <div className="bg-gradient-to-br from-camp-terracotta to-camp-terracotta-dark rounded-2xl p-5 mb-6 text-white">
+          <div className="bg-gradient-to-br from-camp-terracotta to-camp-terracotta-dark rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white/80 text-sm font-medium mb-1">Camp Fee</p>
-                <p className="text-4xl font-display font-bold">${camp.fee}</p>
+                <p className="text-3xl sm:text-4xl font-display font-bold">${camp.fee}</p>
               </div>
-              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-2xl flex items-center justify-center">
                 {Icons.sparkles}
               </div>
             </div>
           </div>
 
           {/* Details grid */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-camp-warm rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2 text-camp-terracotta">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="bg-camp-warm rounded-xl p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-1 sm:mb-2 text-camp-terracotta">
                 {Icons.location}
-                <span className="text-xs font-semibold uppercase tracking-wider text-camp-bark/50">Location</span>
+                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-camp-bark/50">Location</span>
               </div>
-              <p className="font-semibold text-camp-pine">{camp.location}</p>
-              <p className="text-sm text-camp-bark/60">{camp.community}</p>
+              <p className="font-semibold text-camp-pine text-sm sm:text-base">{camp.location}</p>
+              <p className="text-xs sm:text-sm text-camp-bark/60">{camp.community}</p>
             </div>
 
-            <div className="bg-camp-warm rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2 text-camp-bark/50">
+            <div className="bg-camp-warm rounded-xl p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-1 sm:mb-2 text-camp-bark/50">
                 {Icons.user}
-                <span className="text-xs font-semibold uppercase tracking-wider">Ages</span>
+                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">Ages</span>
               </div>
-              <p className="font-semibold text-camp-pine">{camp.minAge} - {camp.maxAge} years</p>
+              <p className="font-semibold text-camp-pine text-sm sm:text-base">{camp.minAge} - {camp.maxAge} years</p>
             </div>
 
-            <div className="bg-camp-warm rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2 text-camp-forest">
+            <div className="bg-camp-warm rounded-xl p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-1 sm:mb-2 text-camp-forest">
                 {Icons.calendar}
-                <span className="text-xs font-semibold uppercase tracking-wider text-camp-bark/50">Dates</span>
+                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-camp-bark/50">Dates</span>
               </div>
-              <p className="font-semibold text-camp-pine">
+              <p className="font-semibold text-camp-pine text-sm sm:text-base">
                 {camp.startDate.dayName}, {camp.startDate.monthName} {camp.startDate.day}
               </p>
               {camp.durationDays > 1 && (
-                <p className="text-sm text-camp-bark/60">
+                <p className="text-xs sm:text-sm text-camp-bark/60">
                   to {camp.endDate.dayName}, {camp.endDate.monthName} {camp.endDate.day}
                 </p>
               )}
             </div>
 
-            <div className="bg-camp-warm rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2 text-camp-sun">
+            <div className="bg-camp-warm rounded-xl p-3 sm:p-4">
+              <div className="flex items-center gap-2 mb-1 sm:mb-2 text-camp-sun">
                 {Icons.clock}
-                <span className="text-xs font-semibold uppercase tracking-wider text-camp-bark/50">Time</span>
+                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-camp-bark/50">Time</span>
               </div>
-              <p className="font-semibold text-camp-pine">
+              <p className="font-semibold text-camp-pine text-sm sm:text-base">
                 {camp.startTime.formatted} - {camp.endTime.formatted}
               </p>
-              <p className="text-sm text-camp-bark/60">{camp.durationHours} hours</p>
+              <p className="text-xs sm:text-sm text-camp-bark/60">{camp.durationHours} hours</p>
             </div>
           </div>
 
@@ -1008,7 +1034,7 @@ function CampModal({ camp, onClose }: { camp: Camp; onClose: () => void }) {
           )}
 
           {/* Status & Catalog */}
-          <div className="flex items-center gap-4 mb-6 text-sm">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 text-sm">
             <div className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg font-medium">
               {camp.status}
             </div>
