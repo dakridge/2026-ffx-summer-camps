@@ -214,8 +214,8 @@ function App() {
       if (filters.minAge !== null && camp.maxAge < filters.minAge) return false;
       if (filters.maxAge !== null && camp.minAge > filters.maxAge) return false;
       if (filters.maxFee !== null && camp.fee > filters.maxFee) return false;
-      if (filters.startHour !== null && camp.startTime.hour < filters.startHour) return false;
-      if (filters.endHour !== null && camp.endTime.hour > filters.endHour) return false;
+      if (filters.startHour !== null && camp.startTime.hour > filters.startHour) return false;
+      if (filters.endHour !== null && camp.endTime.hour < filters.endHour) return false;
       return true;
     });
   }, [data, filters]);
@@ -232,7 +232,7 @@ function App() {
 
   const hasActiveFilters = filters.search || filters.categories.length || filters.communities.length ||
     filters.locations.length || filters.dateRanges.length || filters.minAge !== null ||
-    filters.maxAge !== null || filters.maxFee !== null;
+    filters.maxAge !== null || filters.maxFee !== null || filters.startHour !== null || filters.endHour !== null;
 
   if (loading) {
     return (
@@ -346,6 +346,58 @@ function App() {
                 onChange={(e) => setFilters((prev) => ({ ...prev, maxFee: e.target.value ? parseInt(e.target.value) : null }))}
                 className="w-full pl-9 pr-4 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30"
               />
+            </div>
+          </div>
+
+          {/* Time Filters */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-camp-bark/50 mb-2">
+              Schedule
+            </label>
+            <div className="flex flex-col gap-2">
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-camp-bark/40">
+                  {Icons.clock}
+                </div>
+                <select
+                  value={filters.startHour ?? ""}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, startHour: e.target.value ? parseInt(e.target.value) : null }))}
+                  className="w-full pl-9 pr-4 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine appearance-none cursor-pointer transition-all hover:border-camp-terracotta/30"
+                >
+                  <option value="">Starts by...</option>
+                  <option value="7">7:00 AM</option>
+                  <option value="8">8:00 AM</option>
+                  <option value="9">9:00 AM</option>
+                  <option value="10">10:00 AM</option>
+                  <option value="11">11:00 AM</option>
+                  <option value="12">12:00 PM</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-camp-bark/40 pointer-events-none">
+                  {Icons.chevronDown}
+                </div>
+              </div>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-camp-bark/40">
+                  {Icons.clock}
+                </div>
+                <select
+                  value={filters.endHour ?? ""}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, endHour: e.target.value ? parseInt(e.target.value) : null }))}
+                  className="w-full pl-9 pr-4 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine appearance-none cursor-pointer transition-all hover:border-camp-terracotta/30"
+                >
+                  <option value="">Ends after...</option>
+                  <option value="12">12:00 PM</option>
+                  <option value="13">1:00 PM</option>
+                  <option value="14">2:00 PM</option>
+                  <option value="15">3:00 PM</option>
+                  <option value="16">4:00 PM</option>
+                  <option value="17">5:00 PM</option>
+                  <option value="18">6:00 PM</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-camp-bark/40 pointer-events-none">
+                  {Icons.chevronDown}
+                </div>
+              </div>
             </div>
           </div>
 
