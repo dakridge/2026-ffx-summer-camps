@@ -2242,15 +2242,17 @@ function CampModal({ camp, onClose }: { camp: Camp; onClose: () => void }) {
             </div>
           </div>
 
-          {/* Register button */}
-          <a
-            href="https://www.fairfaxcounty.gov/parks/camps"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full py-4 bg-camp-forest hover:bg-camp-pine text-white text-center font-bold rounded-xl transition-colors shadow-camp hover:shadow-camp-lg"
-          >
-            Register on FCPA Website
-          </a>
+          {/* Register button - hidden for now */}
+          {false && (
+            <a
+              href="https://www.fairfaxcounty.gov/parks/camps"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full py-4 bg-camp-forest hover:bg-camp-pine text-white text-center font-bold rounded-xl transition-colors shadow-camp hover:shadow-camp-lg"
+            >
+              Register on FCPA Website
+            </a>
+          )}
         </div>
       </div>
     </div>
