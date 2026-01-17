@@ -24,7 +24,16 @@ import {
   Check,
   AlertCircle,
   Link2,
+  Download,
 } from "lucide-react";
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  pdf,
+} from "@react-pdf/renderer";
 
 interface ParsedDate {
   iso: string;
@@ -178,7 +187,196 @@ const Icons = {
   printer: <Printer className="w-5 h-5" strokeWidth={2} />,
   check: <Check className="w-4 h-4" strokeWidth={2} />,
   alert: <AlertCircle className="w-4 h-4" strokeWidth={2} />,
+  download: <Download className="w-5 h-5" strokeWidth={2} />,
 };
+
+// PDF Styles
+const pdfStyles = StyleSheet.create({
+  page: {
+    padding: 35,
+    fontFamily: "Helvetica",
+    fontSize: 10,
+    color: "#1B4332",
+  },
+  header: {
+    marginBottom: 16,
+    borderBottomWidth: 2,
+    borderBottomColor: "#2D6A4F",
+    paddingBottom: 12,
+  },
+  title: {
+    fontSize: 21,
+    fontFamily: "Helvetica-Bold",
+    color: "#1B4332",
+    marginBottom: 3,
+  },
+  subtitle: {
+    fontSize: 10,
+    color: "#6B4423",
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 16,
+    backgroundColor: "#FAF5EF",
+    padding: 12,
+    borderRadius: 6,
+  },
+  summaryItem: {
+    alignItems: "center",
+  },
+  summaryValue: {
+    fontSize: 18,
+    fontFamily: "Helvetica-Bold",
+    color: "#2D6A4F",
+  },
+  summaryValueCost: {
+    fontSize: 18,
+    fontFamily: "Helvetica-Bold",
+    color: "#E85D04",
+  },
+  summaryLabel: {
+    fontSize: 8,
+    color: "#6B4423",
+    marginTop: 2,
+  },
+  weekRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F5EBE0",
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  weekDate: {
+    width: 90,
+    fontFamily: "Helvetica-Bold",
+    fontSize: 10,
+  },
+  weekCamp: {
+    flex: 1,
+    paddingHorizontal: 10,
+  },
+  weekCampTitle: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 10,
+    marginBottom: 1,
+  },
+  weekCampDetails: {
+    fontSize: 8,
+    color: "#6B4423",
+  },
+  weekPrice: {
+    width: 55,
+    textAlign: "right",
+    fontFamily: "Helvetica-Bold",
+    color: "#E85D04",
+    fontSize: 10,
+  },
+  emptyWeek: {
+    color: "#9CA3AF",
+    fontStyle: "italic",
+    fontSize: 9,
+  },
+  footer: {
+    marginTop: 20,
+    paddingTop: 12,
+    borderTopWidth: 2,
+    borderTopColor: "#2D6A4F",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  footerTotal: {
+    fontSize: 13,
+    fontFamily: "Helvetica-Bold",
+  },
+  footerValue: {
+    fontSize: 13,
+    fontFamily: "Helvetica-Bold",
+    color: "#E85D04",
+  },
+  generated: {
+    marginTop: 20,
+    fontSize: 8,
+    color: "#9CA3AF",
+    textAlign: "center",
+  },
+});
+
+interface PlannerPDFProps {
+  weeks: { dateRange: string; startDate: ParsedDate; endDate: ParsedDate }[];
+  plannedCamps: Map<string, Camp>;
+  totalCost: number;
+}
+
+function PlannerPDF({ weeks, plannedCamps, totalCost }: PlannerPDFProps) {
+  const weeksPlanned = plannedCamps.size;
+  const weeksWithGaps = weeks.length - weeksPlanned;
+
+  return (
+    <Document>
+      <Page size="A4" style={pdfStyles.page}>
+        {/* Header */}
+        <View style={pdfStyles.header}>
+          <Text style={pdfStyles.title}>Summer Camp Plan 2026</Text>
+          <Text style={pdfStyles.subtitle}>Fairfax County Park Authority</Text>
+        </View>
+
+        {/* Summary */}
+        <View style={pdfStyles.summaryRow}>
+          <View style={pdfStyles.summaryItem}>
+            <Text style={pdfStyles.summaryValue}>{weeksPlanned}</Text>
+            <Text style={pdfStyles.summaryLabel}>Weeks Planned</Text>
+          </View>
+          <View style={pdfStyles.summaryItem}>
+            <Text style={pdfStyles.summaryValueCost}>${totalCost}</Text>
+            <Text style={pdfStyles.summaryLabel}>Total Cost</Text>
+          </View>
+          <View style={pdfStyles.summaryItem}>
+            <Text style={pdfStyles.summaryValue}>{weeksWithGaps}</Text>
+            <Text style={pdfStyles.summaryLabel}>Weeks with Gaps</Text>
+          </View>
+        </View>
+
+        {/* Week List */}
+        {weeks.map((week) => {
+          const camp = plannedCamps.get(week.dateRange);
+          return (
+            <View key={week.dateRange} style={pdfStyles.weekRow}>
+              <Text style={pdfStyles.weekDate}>
+                {week.startDate.monthName.slice(0, 3)} {week.startDate.day} - {week.endDate.day}
+              </Text>
+              <View style={pdfStyles.weekCamp}>
+                {camp ? (
+                  <>
+                    <Text style={pdfStyles.weekCampTitle}>{camp.title}</Text>
+                    <Text style={pdfStyles.weekCampDetails}>
+                      {camp.location} · {camp.startTime.formatted} - {camp.endTime.formatted} · Ages {camp.minAge}-{camp.maxAge}
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={pdfStyles.emptyWeek}>No camp selected</Text>
+                )}
+              </View>
+              <Text style={pdfStyles.weekPrice}>
+                {camp ? `$${camp.fee}` : "—"}
+              </Text>
+            </View>
+          );
+        })}
+
+        {/* Footer */}
+        <View style={pdfStyles.footer}>
+          <Text style={pdfStyles.footerTotal}>Total Cost:</Text>
+          <Text style={pdfStyles.footerValue}>${totalCost}</Text>
+        </View>
+
+        <Text style={pdfStyles.generated}>
+          Generated on {new Date().toLocaleDateString()} · Summer Camp Explorer · fairfax-camps.vercel.app
+        </Text>
+      </Page>
+    </Document>
+  );
+}
 
 function App() {
   const [data, setData] = useState<CampsData | null>(null);
@@ -1285,8 +1483,27 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
   const weeksCovered = allWeeks.filter((w) => plannedCamps.has(w.dateRange)).length;
   const weeksWithGaps = allWeeks.length - weeksCovered;
 
-  const handlePrint = () => {
-    window.print();
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      const blob = await pdf(
+        <PlannerPDF weeks={allWeeks} plannedCamps={plannedCamps} totalCost={totalCost} />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `summer-camp-plan-${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to generate PDF:", err);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   return (
@@ -1368,11 +1585,21 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect,
                 )}
               </button>
               <button
-                onClick={handlePrint}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-camp-warm hover:bg-camp-sand rounded-xl text-sm font-medium text-camp-bark/70 transition-colors"
+                onClick={handleDownloadPDF}
+                disabled={isGeneratingPDF}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-camp-forest hover:bg-camp-pine disabled:bg-camp-forest/50 text-white rounded-xl text-sm font-medium transition-colors"
               >
-                {Icons.printer}
-                Print
+                {isGeneratingPDF ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    {Icons.download}
+                    Download PDF
+                  </>
+                )}
               </button>
             </div>
           )}
