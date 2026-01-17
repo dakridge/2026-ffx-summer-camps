@@ -612,7 +612,10 @@ function App() {
             <CampMap
               camps={filteredCamps}
               onSelect={setSelectedCamp}
-              onFilterLocation={(loc) => setFilters((prev) => ({ ...prev, locations: [loc] }))}
+              onFilterLocation={(loc) => {
+                setFilters((prev) => ({ ...prev, locations: [loc] }));
+                setView("list");
+              }}
             />
           )}
         </div>
