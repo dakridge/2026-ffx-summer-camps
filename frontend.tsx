@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createRoot } from "react-dom/client";
+import { Analytics } from "@vercel/analytics/react";
 import {
   Search,
   MapPin,
@@ -619,6 +620,8 @@ function App() {
 
       {/* Modal */}
       {selectedCamp && <CampModal camp={selectedCamp} onClose={() => setSelectedCamp(null)} />}
+
+      <Analytics />
     </div>
   );
 }
