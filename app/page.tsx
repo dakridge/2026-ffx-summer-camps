@@ -786,23 +786,89 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-camp-cream">
-        <div className="text-center animate-fade-in">
-          <div className="relative mb-6">
-            <div className="w-16 h-16 mx-auto text-camp-terracotta animate-float">
-              {Icons.tent}
+      <div className="h-screen flex items-center justify-center bg-gradient-to-b from-camp-cream via-camp-warm to-camp-sand overflow-hidden relative">
+        {/* Animated clouds */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-16 left-0 animate-drift opacity-30">
+            <svg width="80" height="40" viewBox="0 0 80 40" fill="currentColor" className="text-white">
+              <ellipse cx="30" cy="25" rx="25" ry="12" />
+              <ellipse cx="50" cy="20" rx="20" ry="10" />
+              <ellipse cx="65" cy="25" rx="15" ry="8" />
+            </svg>
+          </div>
+          <div className="absolute top-24 left-0 animate-drift opacity-20" style={{ animationDelay: "-3s", animationDuration: "12s" }}>
+            <svg width="100" height="50" viewBox="0 0 100 50" fill="currentColor" className="text-white">
+              <ellipse cx="35" cy="30" rx="30" ry="14" />
+              <ellipse cx="60" cy="24" rx="24" ry="12" />
+              <ellipse cx="80" cy="30" rx="18" ry="10" />
+            </svg>
+          </div>
+          <div className="absolute top-8 left-0 animate-drift opacity-25" style={{ animationDelay: "-6s", animationDuration: "10s" }}>
+            <svg width="60" height="30" viewBox="0 0 60 30" fill="currentColor" className="text-white">
+              <ellipse cx="22" cy="18" rx="18" ry="9" />
+              <ellipse cx="40" cy="15" rx="15" ry="8" />
+              <ellipse cx="52" cy="18" rx="10" ry="6" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Main content */}
+        <div className="text-center animate-fade-in relative z-10">
+          {/* Scene with tent, sun, and trees */}
+          <div className="relative mb-8 h-32 w-64 mx-auto">
+            {/* Sun with glow */}
+            <div className="absolute -top-4 right-4 animate-pulse-glow">
+              <div className="w-12 h-12 text-camp-sun animate-wiggle" style={{ animationDuration: "3s" }}>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="12" r="5" />
+                  <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+                </svg>
+              </div>
             </div>
-            <div className="absolute -top-2 -right-2">{Icons.sun}</div>
+
+            {/* Left tree */}
+            <div className="absolute bottom-0 left-4 animate-sway" style={{ transformOrigin: "bottom center" }}>
+              <svg width="32" height="56" viewBox="0 0 32 56" className="text-camp-forest">
+                <polygon points="16,0 28,20 22,20 30,36 20,36 24,48 8,48 12,36 2,36 10,20 4,20" fill="currentColor" />
+                <rect x="13" y="48" width="6" height="8" fill="#6B4423" />
+              </svg>
+            </div>
+
+            {/* Tent (center) */}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 animate-bounce-slow">
+              <div className="w-20 h-20 text-camp-terracotta">
+                {Icons.tent}
+              </div>
+            </div>
+
+            {/* Right tree */}
+            <div className="absolute bottom-0 right-6 animate-sway" style={{ transformOrigin: "bottom center", animationDelay: "-1.5s" }}>
+              <svg width="28" height="48" viewBox="0 0 28 48" className="text-camp-forest-light">
+                <polygon points="14,0 24,16 19,16 26,30 18,30 21,42 7,42 10,30 2,30 9,16 4,16" fill="currentColor" />
+                <rect x="11" y="42" width="6" height="6" fill="#6B4423" />
+              </svg>
+            </div>
+
+            {/* Ground line */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-camp-forest/20 to-transparent rounded-full" />
           </div>
-          <div className="w-48 h-1.5 bg-camp-sand rounded-full mx-auto overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-camp-terracotta to-camp-sun animate-pulse rounded-full"
-              style={{ width: "60%" }}
-            />
+
+          {/* Progress bar */}
+          <div className="w-56 h-2 bg-camp-sand/60 rounded-full mx-auto overflow-hidden backdrop-blur-sm">
+            <div className="h-full w-1/2 bg-gradient-to-r from-camp-terracotta via-camp-sun to-camp-terracotta rounded-full animate-progress" />
           </div>
-          <p className="mt-4 text-camp-bark/70 font-medium">
+
+          {/* Loading text with shimmer */}
+          <p className="mt-5 text-camp-bark/80 font-medium text-lg animate-shimmer">
             Loading adventures...
           </p>
+
+          {/* Decorative dots */}
+          <div className="flex justify-center gap-1.5 mt-3">
+            <div className="w-2 h-2 rounded-full bg-camp-terracotta/60 animate-bounce-slow" style={{ animationDelay: "0s" }} />
+            <div className="w-2 h-2 rounded-full bg-camp-sun/60 animate-bounce-slow" style={{ animationDelay: "0.2s" }} />
+            <div className="w-2 h-2 rounded-full bg-camp-forest/60 animate-bounce-slow" style={{ animationDelay: "0.4s" }} />
+          </div>
         </div>
       </div>
     );
