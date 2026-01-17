@@ -940,20 +940,25 @@ export default function HomePage() {
             <label className="block text-xs font-semibold uppercase tracking-wider text-camp-bark/50 mb-2">
               Sort By
             </label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-              className="w-full px-3 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine transition-all hover:border-camp-terracotta/30 cursor-pointer"
-            >
-              <option value="default">Default</option>
-              <option value="name">Name (A-Z)</option>
-              <option value="distance" disabled={!userLocation}>
-                Distance (nearest first)
-              </option>
-              <option value="price">Price (lowest first)</option>
-              <option value="priceDesc">Price (highest first)</option>
-              <option value="date">Date (earliest first)</option>
-            </select>
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="w-full px-3 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine appearance-none cursor-pointer transition-all hover:border-camp-terracotta/30"
+              >
+                <option value="default">Default</option>
+                <option value="name">Name (A-Z)</option>
+                <option value="distance" disabled={!userLocation}>
+                  Distance (nearest first)
+                </option>
+                <option value="price">Price (lowest first)</option>
+                <option value="priceDesc">Price (highest first)</option>
+                <option value="date">Date (earliest first)</option>
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-camp-bark/40 pointer-events-none">
+                {Icons.chevronDown}
+              </div>
+            </div>
           </div>
 
           {/* Search */}
