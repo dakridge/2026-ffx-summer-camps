@@ -114,6 +114,19 @@
       box-shadow: none !important;
     }
 
+    /* Constrain Leaflet z-index on mobile to stay below sidebar (z-50) */
+    @media (max-width: 1023px) {
+      .leaflet-pane,
+      .leaflet-control,
+      .leaflet-top,
+      .leaflet-bottom {
+        z-index: 30 !important;
+      }
+      .leaflet-popup-pane {
+        z-index: 35 !important;
+      }
+    }
+
     /* Card hover effect */
     .camp-card-hover {
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
