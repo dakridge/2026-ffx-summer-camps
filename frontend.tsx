@@ -23,6 +23,7 @@ import {
   Printer,
   Check,
   AlertCircle,
+  Link2,
 } from "lucide-react";
 
 interface ParsedDate {
@@ -192,16 +193,8 @@ function App() {
     if (v === "map" || v === "calendar" || v === "planner") return v;
     return "list";
   });
-  const [plannedCamps, setPlannedCamps] = useState<Map<string, Camp>>(() => {
-    try {
-      const saved = localStorage.getItem("camp-planner");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return new Map(Object.entries(parsed));
-      }
-    } catch {}
-    return new Map();
-  });
+  const [plannedCamps, setPlannedCamps] = useState<Map<string, Camp>>(new Map());
+  const [isSharedPlan, setIsSharedPlan] = useState(false);
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(() => {
@@ -219,14 +212,16 @@ function App() {
     localStorage.setItem("camp-favorites", JSON.stringify([...favorites]));
   }, [favorites]);
 
-  // Persist planned camps to localStorage
+  // Persist planned camps to localStorage (skip while loading or viewing shared plan)
   useEffect(() => {
+    if (loading) return; // Don't save while loading (we haven't loaded existing data yet)
+    if (isSharedPlan) return;
     const obj: Record<string, Camp> = {};
     plannedCamps.forEach((camp, week) => {
       obj[week] = camp;
     });
     localStorage.setItem("camp-planner", JSON.stringify(obj));
-  }, [plannedCamps]);
+  }, [plannedCamps, isSharedPlan, loading]);
 
   const setPlannerCamp = (week: string, camp: Camp | null) => {
     setPlannedCamps((prev) => {
@@ -253,13 +248,18 @@ function App() {
   };
 
   useEffect(() => {
+    // Don't update URL while loading (preserve plan param until we process it)
+    if (loading) return;
+    // Don't update URL when viewing a shared plan (preserve the plan param)
+    if (isSharedPlan) return;
+
     const params = filtersToParams(filters);
     if (view === "map") params.set("view", "map");
     if (view === "calendar") params.set("view", "calendar");
     if (view === "planner") params.set("view", "planner");
     const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
     window.history.replaceState({}, "", newUrl);
-  }, [filters, view]);
+  }, [filters, view, isSharedPlan, loading]);
 
   useEffect(() => {
     fetch("/api/camps")
@@ -267,6 +267,48 @@ function App() {
       .then((d) => {
         setData(d);
         setLoading(false);
+
+        // Check for shared plan in URL
+        const params = new URLSearchParams(window.location.search);
+        const planParam = params.get("plan");
+
+        if (planParam) {
+          // Decode shared plan from URL
+          try {
+            const planPairs = planParam.split(",");
+            const sharedPlan = new Map<string, Camp>();
+            planPairs.forEach((pair) => {
+              const [weekEncoded, catalogId] = pair.split(":");
+              const week = decodeURIComponent(weekEncoded);
+              const camp = d.camps.find((c: Camp) => c.catalogId === catalogId);
+              if (camp) {
+                sharedPlan.set(week, camp);
+              }
+            });
+            if (sharedPlan.size > 0) {
+              setPlannedCamps(sharedPlan);
+              setIsSharedPlan(true);
+              setView("planner");
+            }
+          } catch {}
+        } else {
+          // Load from localStorage
+          try {
+            const saved = localStorage.getItem("camp-planner");
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              const localPlan = new Map<string, Camp>();
+              Object.entries(parsed).forEach(([week, campData]) => {
+                // Re-hydrate camp from current data to ensure it's up to date
+                const camp = d.camps.find((c: Camp) => c.catalogId === (campData as Camp).catalogId);
+                if (camp) {
+                  localPlan.set(week, camp);
+                }
+              });
+              setPlannedCamps(localPlan);
+            }
+          } catch {}
+        }
       });
   }, []);
 
@@ -739,6 +781,16 @@ function App() {
               plannedCamps={plannedCamps}
               onPlanCamp={setPlannerCamp}
               onSelect={setSelectedCamp}
+              isSharedPlan={isSharedPlan}
+              onSaveSharedPlan={() => {
+                setIsSharedPlan(false);
+                // Clear URL plan param
+                const params = new URLSearchParams(window.location.search);
+                params.delete("plan");
+                params.set("view", "planner");
+                const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+                window.history.replaceState({}, "", newUrl);
+              }}
             />
           )}
         </div>
@@ -1154,11 +1206,42 @@ interface MultiWeekPlannerProps {
   plannedCamps: Map<string, Camp>;
   onPlanCamp: (week: string, camp: Camp | null) => void;
   onSelect: (camp: Camp) => void;
+  isSharedPlan: boolean;
+  onSaveSharedPlan: () => void;
 }
 
-function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect }: MultiWeekPlannerProps) {
+function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect, isSharedPlan, onSaveSharedPlan }: MultiWeekPlannerProps) {
   const [expandedWeek, setExpandedWeek] = useState<string | null>(null);
   const [plannerSearch, setPlannerSearch] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const generateShareLink = () => {
+    const planPairs: string[] = [];
+    plannedCamps.forEach((camp, week) => {
+      planPairs.push(`${encodeURIComponent(week)}:${camp.catalogId}`);
+    });
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}?view=planner&plan=${planPairs.join(",")}`;
+  };
+
+  const copyShareLink = async () => {
+    const link = generateShareLink();
+    try {
+      await navigator.clipboard.writeText(link);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const input = document.createElement("input");
+      input.value = link;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
+  };
 
   // Get all unique weeks from ALL camps (not just filtered) sorted chronologically
   const allWeeks = useMemo(() => {
@@ -1211,9 +1294,37 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect 
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6 text-center">
-          <h2 className="font-display text-2xl font-bold text-camp-pine mb-2">Summer Planner</h2>
-          <p className="text-camp-bark/60 text-sm">Select one camp per week to build your summer schedule</p>
+          <h2 className="font-display text-2xl font-bold text-camp-pine mb-2">
+            {isSharedPlan ? "Shared Plan" : "Summer Planner"}
+          </h2>
+          <p className="text-camp-bark/60 text-sm">
+            {isSharedPlan
+              ? "Someone shared this summer camp plan with you"
+              : "Select one camp per week to build your summer schedule"}
+          </p>
         </div>
+
+        {/* Shared Plan Banner */}
+        {isSharedPlan && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 print:hidden">
+            <div className="flex items-start gap-3">
+              <div className="text-amber-500 mt-0.5">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <p className="text-amber-800 text-sm font-medium mb-2">
+                  You're viewing a shared plan. Changes won't be saved.
+                </p>
+                <button
+                  onClick={onSaveSharedPlan}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                >
+                  Save to My Plan
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Summary Card */}
         <div className="bg-white rounded-2xl shadow-camp p-4 sm:p-6 mb-6 print:shadow-none print:border print:border-gray-200">
@@ -1235,13 +1346,35 @@ function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect 
           </div>
 
           {weeksPlanned > 0 && (
-            <button
-              onClick={handlePrint}
-              className="w-full flex items-center justify-center gap-2 py-2.5 bg-camp-warm hover:bg-camp-sand rounded-xl text-sm font-medium text-camp-bark/70 transition-colors print:hidden"
-            >
-              {Icons.printer}
-              Print / Save Plan
-            </button>
+            <div className="flex gap-2 print:hidden">
+              <button
+                onClick={copyShareLink}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                  linkCopied
+                    ? "bg-camp-forest text-white"
+                    : "bg-camp-terracotta hover:bg-camp-terracotta-dark text-white"
+                }`}
+              >
+                {linkCopied ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Link Copied!
+                  </>
+                ) : (
+                  <>
+                    <Link2 className="w-4 h-4" />
+                    Share Plan
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handlePrint}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-camp-warm hover:bg-camp-sand rounded-xl text-sm font-medium text-camp-bark/70 transition-colors"
+              >
+                {Icons.printer}
+                Print
+              </button>
+            </div>
           )}
         </div>
 
