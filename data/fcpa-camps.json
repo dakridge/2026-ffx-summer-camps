@@ -56767,7 +56767,7 @@
         "catalogId": "DZK.0TV1",
         "community": "Oakton",
         "location": "Oakton Elementary School",
-        "fee": "$1,440 ",
+        "fee": 1440,
         "startDate": {
           "iso": "2026-07-13",
           "year": 2026,
@@ -77953,7 +77953,7 @@
         "catalogId": "5N8.9K62",
         "community": "Oakton",
         "location": "Oakton Elementary School",
-        "fee": "$1,440 ",
+        "fee": 1440,
         "startDate": {
           "iso": "2026-07-27",
           "year": 2026,
@@ -113633,7 +113633,7 @@
           "Week 9 (August 17-21)"
         ]
       },
-      "generatedAt": "2026-01-17T15:40:51.176Z"
+      "generatedAt": "2026-01-17T22:30:19.228Z"
     }
   }
 }

@@ -436,7 +436,7 @@ function App() {
     }
   });
   const [locationLoading, setLocationLoading] = useState(false);
-  const [sortBy, setSortBy] = useState<"default" | "distance" | "price" | "date">("default");
+  const [sortBy, setSortBy] = useState<"default" | "distance" | "price" | "priceDesc" | "date" | "name">("default");
 
   // Persist user location to localStorage
   useEffect(() => {
@@ -631,10 +631,14 @@ function App() {
       });
     } else if (sortBy === "price") {
       campsWithDistance.sort((a, b) => a.fee - b.fee);
+    } else if (sortBy === "priceDesc") {
+      campsWithDistance.sort((a, b) => b.fee - a.fee);
     } else if (sortBy === "date") {
       campsWithDistance.sort((a, b) =>
         new Date(a.startDate.iso).getTime() - new Date(b.startDate.iso).getTime()
       );
+    } else if (sortBy === "name") {
+      campsWithDistance.sort((a, b) => a.title.localeCompare(b.title));
     }
 
     return campsWithDistance;
@@ -793,8 +797,10 @@ function App() {
               className="w-full px-3 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine transition-all hover:border-camp-terracotta/30 cursor-pointer"
             >
               <option value="default">Default</option>
+              <option value="name">Name (A-Z)</option>
               <option value="distance" disabled={!userLocation}>Distance (nearest first)</option>
               <option value="price">Price (lowest first)</option>
+              <option value="priceDesc">Price (highest first)</option>
               <option value="date">Date (earliest first)</option>
             </select>
           </div>

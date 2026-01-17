@@ -159,10 +159,10 @@ function inferTime(value: string): ParsedTime | null {
 }
 
 function inferNumber(value: string): number | null {
-  // Match patterns like "$55 ", "$139", "55"
-  const match = value.match(/^\$?\s*(\d+(?:\.\d+)?)\s*$/);
+  // Match patterns like "$55 ", "$139", "55", "$1,440"
+  const match = value.match(/^\$?\s*([\d,]+(?:\.\d+)?)\s*$/);
   if (match) {
-    return parseFloat(match[1]);
+    return parseFloat(match[1].replace(/,/g, ""));
   }
   return null;
 }
