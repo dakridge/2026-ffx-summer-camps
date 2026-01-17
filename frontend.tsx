@@ -639,9 +639,7 @@ function CampMap({ camps, onSelect, onFilterLocation }: { camps: Camp[]; onSelec
       if (mapRef.current && !mapInstanceRef.current) {
         const leaflet = (window as any).L;
         mapInstanceRef.current = leaflet.map(mapRef.current).setView([38.85, -77.3], 10);
-        leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "&copy; OpenStreetMap contributors",
-        }).addTo(mapInstanceRef.current);
+        leaflet.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png").addTo(mapInstanceRef.current);
         setMapReady(true);
       }
     };
@@ -808,7 +806,7 @@ function ModalMap({ coordinates, location }: { coordinates: { lat: number; lng: 
       attributionControl: false,
     }).setView([coordinates.lat, coordinates.lng], 14);
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png").addTo(map);
 
     const customIcon = L.divIcon({
       className: 'custom-marker',
