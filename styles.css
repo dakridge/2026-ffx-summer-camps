@@ -364,6 +364,24 @@ body {
   border-top: 1px solid #e2e8f0;
 }
 
+.popup-filter-btn {
+  width: 100%;
+  padding: 8px 12px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: background 0.2s;
+}
+
+.popup-filter-btn:hover {
+  background: #1d4ed8;
+}
+
 /* Loading */
 .loading {
   display: flex;

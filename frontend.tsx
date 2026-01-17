@@ -57,6 +57,7 @@ interface Filters {
   search: string;
   categories: string[];
   communities: string[];
+  locations: string[];
   dateRanges: string[];
   minAge: number | null;
   maxAge: number | null;
@@ -69,6 +70,7 @@ const initialFilters: Filters = {
   search: "",
   categories: [],
   communities: [],
+  locations: [],
   dateRanges: [],
   minAge: null,
   maxAge: null,
@@ -77,12 +79,56 @@ const initialFilters: Filters = {
   endHour: null,
 };
 
+// URL params helpers
+function filtersToParams(filters: Filters): URLSearchParams {
+  const params = new URLSearchParams();
+  if (filters.search) params.set("q", filters.search);
+  if (filters.categories.length) params.set("cat", filters.categories.join(","));
+  if (filters.communities.length) params.set("comm", filters.communities.join(","));
+  if (filters.locations.length) params.set("loc", filters.locations.join(","));
+  if (filters.dateRanges.length) params.set("week", filters.dateRanges.join("|"));
+  if (filters.minAge !== null) params.set("minAge", filters.minAge.toString());
+  if (filters.maxAge !== null) params.set("maxAge", filters.maxAge.toString());
+  if (filters.maxFee !== null) params.set("maxFee", filters.maxFee.toString());
+  return params;
+}
+
+function paramsToFilters(params: URLSearchParams): Filters {
+  return {
+    search: params.get("q") || "",
+    categories: params.get("cat")?.split(",").filter(Boolean) || [],
+    communities: params.get("comm")?.split(",").filter(Boolean) || [],
+    locations: params.get("loc")?.split(",").filter(Boolean) || [],
+    dateRanges: params.get("week")?.split("|").filter(Boolean) || [],
+    minAge: params.get("minAge") ? parseInt(params.get("minAge")!) : null,
+    maxAge: params.get("maxAge") ? parseInt(params.get("maxAge")!) : null,
+    maxFee: params.get("maxFee") ? parseInt(params.get("maxFee")!) : null,
+    startHour: null,
+    endHour: null,
+  };
+}
+
 function App() {
   const [data, setData] = useState<CampsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<Filters>(initialFilters);
-  const [view, setView] = useState<"list" | "map">("list");
+  const [filters, setFilters] = useState<Filters>(() => {
+    // Initialize from URL params
+    const params = new URLSearchParams(window.location.search);
+    return paramsToFilters(params);
+  });
+  const [view, setView] = useState<"list" | "map">(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("view") === "map" ? "map" : "list";
+  });
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = filtersToParams(filters);
+    if (view === "map") params.set("view", "map");
+    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+    window.history.replaceState({}, "", newUrl);
+  }, [filters, view]);
 
   useEffect(() => {
     fetch("/api/camps")
@@ -114,6 +160,11 @@ function App() {
 
       // Community filter
       if (filters.communities.length > 0 && !filters.communities.includes(camp.community)) {
+        return false;
+      }
+
+      // Location filter
+      if (filters.locations.length > 0 && !filters.locations.includes(camp.location)) {
         return false;
       }
 
@@ -270,6 +321,23 @@ function App() {
             )}
           </div>
 
+          {filters.locations.length > 0 && (
+            <div className="filter-group">
+              <label>Location</label>
+              <div className="chip-group">
+                {filters.locations.map((loc) => (
+                  <button
+                    key={loc}
+                    className="chip active"
+                    onClick={() => setFilters((prev) => ({ ...prev, locations: prev.locations.filter((l) => l !== loc) }))}
+                  >
+                    {loc} ×
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="filter-group">
             <label>Week</label>
             <select
@@ -325,7 +393,7 @@ function App() {
           {view === "list" ? (
             <CampList camps={filteredCamps} onSelect={setSelectedCamp} />
           ) : (
-            <CampMap camps={filteredCamps} onSelect={setSelectedCamp} />
+            <CampMap camps={filteredCamps} onSelect={setSelectedCamp} onFilterLocation={(loc) => setFilters((prev) => ({ ...prev, locations: [loc] }))} />
           )}
         </div>
       </main>
@@ -396,7 +464,7 @@ function CampList({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Camp) =
   );
 }
 
-function CampMap({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Camp) => void }) {
+function CampMap({ camps, onSelect, onFilterLocation }: { camps: Camp[]; onSelect: (camp: Camp) => void; onFilterLocation: (location: string) => void }) {
   const mapRef = React.useRef<HTMLDivElement>(null);
   const mapInstanceRef = React.useRef<any>(null);
   const markersRef = React.useRef<any[]>([]);
@@ -481,6 +549,7 @@ function CampMap({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Camp) =>
         <div class="map-popup">
           <h3>${groupCamps[0].location}</h3>
           <p class="popup-subtitle">${groupCamps[0].community} · ${groupCamps.length} camps</p>
+          <button class="popup-filter-btn" data-location="${groupCamps[0].location}">Filter to this location</button>
           <div class="popup-camps-list">${campsList}</div>
           ${moreText}
         </div>
@@ -498,6 +567,13 @@ function CampMap({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Camp) =>
             if (camp) onSelect(camp);
           });
         });
+        // Add click handler for filter button
+        document.querySelectorAll(".popup-filter-btn").forEach((el) => {
+          el.addEventListener("click", () => {
+            const location = el.getAttribute("data-location");
+            if (location) onFilterLocation(location);
+          });
+        });
       });
 
       markersRef.current.push(marker);
@@ -508,7 +584,7 @@ function CampMap({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Camp) =>
       const group = L.featureGroup(markersRef.current);
       mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
     }
-  }, [camps, onSelect, mapReady]);
+  }, [camps, onSelect, onFilterLocation, mapReady]);
 
   return (
     <div className="map-container">
