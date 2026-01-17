@@ -25,4 +25,15 @@ if (!result.success) {
 const campsData = await Bun.file("data/fcpa-camps.json").json();
 await Bun.write("dist/api/camps.json", JSON.stringify(campsData["2026 FCPA Camps"]));
 
+// Copy static assets (og-image, favicon, etc.)
+const staticFiles = ["og-image.png", "favicon.ico"];
+for (const file of staticFiles) {
+  try {
+    const content = await Bun.file(file).arrayBuffer();
+    await Bun.write(`dist/${file}`, content);
+  } catch {
+    // File doesn't exist, skip
+  }
+}
+
 console.log("Build complete! Output in dist/");
