@@ -178,9 +178,11 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     return paramsToFilters(params);
   });
-  const [view, setView] = useState<"list" | "map">(() => {
+  const [view, setView] = useState<"list" | "map" | "calendar">(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get("view") === "map" ? "map" : "list";
+    const v = params.get("view");
+    if (v === "map" || v === "calendar") return v;
+    return "list";
   });
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -214,6 +216,7 @@ function App() {
   useEffect(() => {
     const params = filtersToParams(filters);
     if (view === "map") params.set("view", "map");
+    if (view === "calendar") params.set("view", "calendar");
     const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
     window.history.replaceState({}, "", newUrl);
   }, [filters, view]);
@@ -623,10 +626,10 @@ function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-camp-warm p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-camp-warm p-1 rounded-xl">
             <button
               onClick={() => setView("list")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 view === "list"
                   ? "bg-white text-camp-pine shadow-camp"
                   : "text-camp-bark/60 hover:text-camp-bark"
@@ -637,7 +640,7 @@ function App() {
             </button>
             <button
               onClick={() => setView("map")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 view === "map"
                   ? "bg-white text-camp-pine shadow-camp"
                   : "text-camp-bark/60 hover:text-camp-bark"
@@ -646,14 +649,26 @@ function App() {
               {Icons.map}
               <span className="hidden sm:inline">Map</span>
             </button>
+            <button
+              onClick={() => setView("calendar")}
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                view === "calendar"
+                  ? "bg-white text-camp-pine shadow-camp"
+                  : "text-camp-bark/60 hover:text-camp-bark"
+              }`}
+            >
+              {Icons.calendar}
+              <span className="hidden sm:inline">Calendar</span>
+            </button>
           </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-hidden relative">
-          {view === "list" ? (
+          {view === "list" && (
             <CampList camps={filteredCamps} onSelect={setSelectedCamp} favorites={favorites} onToggleFavorite={toggleFavorite} />
-          ) : (
+          )}
+          {view === "map" && (
             <CampMap
               camps={filteredCamps}
               onSelect={setSelectedCamp}
@@ -662,6 +677,9 @@ function App() {
                 setView("list");
               }}
             />
+          )}
+          {view === "calendar" && (
+            <CampCalendar camps={filteredCamps} onSelect={setSelectedCamp} />
           )}
         </div>
       </main>
@@ -904,6 +922,144 @@ function CampMap({ camps, onSelect, onFilterLocation }: { camps: Camp[]; onSelec
   return (
     <div className="h-full w-full relative">
       <div id="map" ref={mapRef} className="h-full w-full" />
+    </div>
+  );
+}
+
+function CampCalendar({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Camp) => void }) {
+  // Group camps by week (dateRange)
+  const campsByWeek = useMemo(() => {
+    const grouped = new Map<string, Camp[]>();
+    camps.forEach((camp) => {
+      if (!grouped.has(camp.dateRange)) {
+        grouped.set(camp.dateRange, []);
+      }
+      grouped.get(camp.dateRange)!.push(camp);
+    });
+    // Sort by start date
+    return Array.from(grouped.entries()).sort((a, b) => {
+      const campA = a[1][0];
+      const campB = b[1][0];
+      return new Date(campA.startDate.iso).getTime() - new Date(campB.startDate.iso).getTime();
+    });
+  }, [camps]);
+
+  // Get all unique weeks from camps for display
+  const allWeeks = useMemo(() => {
+    const weeks = new Set<string>();
+    camps.forEach((camp) => weeks.add(camp.dateRange));
+    return Array.from(weeks).sort((a, b) => {
+      const campA = camps.find((c) => c.dateRange === a);
+      const campB = camps.find((c) => c.dateRange === b);
+      if (!campA || !campB) return 0;
+      return new Date(campA.startDate.iso).getTime() - new Date(campB.startDate.iso).getTime();
+    });
+  }, [camps]);
+
+  if (camps.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center p-8">
+        <div className="text-center animate-fade-in max-w-sm">
+          <div className="w-20 h-20 mx-auto mb-6 bg-camp-sand/50 rounded-2xl flex items-center justify-center text-camp-bark/30">
+            {Icons.calendar}
+          </div>
+          <h3 className="font-display text-xl font-bold text-camp-pine mb-2">No camps found</h3>
+          <p className="text-camp-bark/60 text-sm">
+            Try adjusting your filters to discover more adventures
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full overflow-y-auto p-4 sm:p-6 bg-gradient-to-b from-camp-cream to-camp-warm">
+      <div className="max-w-6xl mx-auto">
+        {/* Calendar header */}
+        <div className="mb-6 text-center">
+          <h2 className="font-display text-2xl font-bold text-camp-pine mb-2">Summer Schedule</h2>
+          <p className="text-camp-bark/60 text-sm">View camps by week to plan your summer</p>
+        </div>
+
+        {/* Week rows */}
+        <div className="space-y-4">
+          {campsByWeek.map(([dateRange, weekCamps], weekIndex) => {
+            const firstCamp = weekCamps[0];
+            const weekStart = firstCamp.startDate;
+
+            return (
+              <div
+                key={dateRange}
+                className={`bg-white rounded-2xl shadow-camp overflow-hidden animate-slide-up opacity-0 stagger-${Math.min(weekIndex + 1, 6)}`}
+                style={{ animationFillMode: 'forwards' }}
+              >
+                {/* Week header */}
+                <div className="bg-gradient-to-r from-camp-forest to-camp-forest-light px-4 sm:px-6 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                      <span className="text-white font-display font-bold text-lg">{weekStart.day}</span>
+                    </div>
+                    <div>
+                      <h3 className="font-display font-bold text-white">
+                        {weekStart.monthName} {weekStart.day} - {firstCamp.endDate.monthName} {firstCamp.endDate.day}
+                      </h3>
+                      <p className="text-white/70 text-xs">Week of {weekStart.monthName} {weekStart.day}</p>
+                    </div>
+                  </div>
+                  <div className="bg-white/20 px-3 py-1 rounded-full">
+                    <span className="text-white text-sm font-semibold">{weekCamps.length} camps</span>
+                  </div>
+                </div>
+
+                {/* Camp cards for this week */}
+                <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {weekCamps.map((camp, i) => {
+                    const style = getCategoryStyle(camp.category);
+                    return (
+                      <div
+                        key={`${camp.catalogId}-${i}`}
+                        onClick={() => onSelect(camp)}
+                        className="group bg-camp-warm hover:bg-camp-sand rounded-xl p-3 cursor-pointer transition-all hover:shadow-camp border border-transparent hover:border-camp-terracotta/20"
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h4 className="font-semibold text-camp-pine text-sm leading-tight group-hover:text-camp-terracotta transition-colors line-clamp-2">
+                            {camp.title}
+                          </h4>
+                          <span className="flex-shrink-0 px-2 py-0.5 bg-camp-terracotta text-white text-xs font-bold rounded">
+                            ${camp.fee}
+                          </span>
+                        </div>
+                        <span className={`inline-block px-2 py-0.5 ${style.bg} ${style.text} text-[10px] font-bold uppercase tracking-wider rounded mb-2`}>
+                          {camp.category}
+                        </span>
+                        <div className="flex items-center gap-3 text-xs text-camp-bark/60">
+                          <span className="flex items-center gap-1">
+                            {Icons.clock}
+                            {camp.startTime.formatted}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            {Icons.user}
+                            {camp.minAge}-{camp.maxAge}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex items-center gap-1 text-xs text-camp-bark/50">
+                          {Icons.location}
+                          <span className="truncate">{camp.location}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Summary footer */}
+        <div className="mt-8 text-center text-camp-bark/50 text-sm">
+          <p>{camps.length} camps across {campsByWeek.length} weeks</p>
+        </div>
+      </div>
     </div>
   );
 }
