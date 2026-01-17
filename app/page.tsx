@@ -95,8 +95,7 @@ interface Filters {
   communities: string[];
   locations: string[];
   dateRanges: string[];
-  minAge: number | null;
-  maxAge: number | null;
+  childAge: number | null;
   maxFee: number | null;
   startHour: number | null;
   endHour: number | null;
@@ -108,8 +107,7 @@ const initialFilters: Filters = {
   communities: [],
   locations: [],
   dateRanges: [],
-  minAge: null,
-  maxAge: null,
+  childAge: null,
   maxFee: null,
   startHour: null,
   endHour: null,
@@ -248,8 +246,7 @@ function filtersToParams(filters: Filters): URLSearchParams {
   if (filters.locations.length) params.set("loc", filters.locations.join(","));
   if (filters.dateRanges.length)
     params.set("week", filters.dateRanges.join("|"));
-  if (filters.minAge !== null) params.set("minAge", filters.minAge.toString());
-  if (filters.maxAge !== null) params.set("maxAge", filters.maxAge.toString());
+  if (filters.childAge !== null) params.set("age", filters.childAge.toString());
   if (filters.maxFee !== null) params.set("maxFee", filters.maxFee.toString());
   return params;
 }
@@ -261,8 +258,7 @@ function paramsToFilters(params: URLSearchParams): Filters {
     communities: params.get("comm")?.split(",").filter(Boolean) || [],
     locations: params.get("loc")?.split(",").filter(Boolean) || [],
     dateRanges: params.get("week")?.split("|").filter(Boolean) || [],
-    minAge: params.get("minAge") ? parseInt(params.get("minAge")!) : null,
-    maxAge: params.get("maxAge") ? parseInt(params.get("maxAge")!) : null,
+    childAge: params.get("age") ? parseInt(params.get("age")!) : null,
     maxFee: params.get("maxFee") ? parseInt(params.get("maxFee")!) : null,
     startHour: null,
     endHour: null,
@@ -717,8 +713,7 @@ export default function HomePage() {
         !filters.dateRanges.includes(camp.dateRange)
       )
         return false;
-      if (filters.minAge !== null && camp.maxAge < filters.minAge) return false;
-      if (filters.maxAge !== null && camp.minAge > filters.maxAge) return false;
+      if (filters.childAge !== null && (camp.minAge > filters.childAge || camp.maxAge < filters.childAge)) return false;
       if (filters.maxFee !== null && camp.fee > filters.maxFee) return false;
       if (filters.startHour !== null && camp.startTime.hour > filters.startHour)
         return false;
@@ -784,8 +779,7 @@ export default function HomePage() {
     filters.communities.length ||
     filters.locations.length ||
     filters.dateRanges.length ||
-    filters.minAge !== null ||
-    filters.maxAge !== null ||
+    filters.childAge !== null ||
     filters.maxFee !== null ||
     filters.startHour !== null ||
     filters.endHour !== null;
@@ -987,37 +981,20 @@ export default function HomePage() {
             <label className="block text-xs font-semibold uppercase tracking-wider text-camp-bark/50 mb-2">
               Child&apos;s Age
             </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                placeholder="Min"
-                min={3}
-                max={18}
-                value={filters.minAge ?? ""}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    minAge: e.target.value ? parseInt(e.target.value) : null,
-                  }))
-                }
-                className="flex-1 px-3 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30"
-              />
-              <span className="text-camp-bark/40 text-sm">to</span>
-              <input
-                type="number"
-                placeholder="Max"
-                min={3}
-                max={18}
-                value={filters.maxAge ?? ""}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    maxAge: e.target.value ? parseInt(e.target.value) : null,
-                  }))
-                }
-                className="flex-1 px-3 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30"
-              />
-            </div>
+            <input
+              type="number"
+              placeholder="Enter age"
+              min={3}
+              max={18}
+              value={filters.childAge ?? ""}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  childAge: e.target.value ? parseInt(e.target.value) : null,
+                }))
+              }
+              className="w-full px-3 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30"
+            />
           </div>
 
           {/* Max Price */}
