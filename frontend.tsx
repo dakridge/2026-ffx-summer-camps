@@ -25,6 +25,8 @@ import {
   AlertCircle,
   Link2,
   Download,
+  Navigation,
+  Crosshair,
 } from "lucide-react";
 import {
   Document,
@@ -71,6 +73,7 @@ interface Camp {
   durationHours: number;
   durationDays: number;
   coordinates?: { lat: number; lng: number };
+  distance?: number | null;
 }
 
 interface CampsData {
@@ -111,6 +114,26 @@ const initialFilters: Filters = {
   startHour: null,
   endHour: null,
 };
+
+// Haversine distance calculation (returns miles)
+function getDistanceMiles(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const R = 3959; // Earth's radius in miles
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 // Category icons and colors
 const categoryStyles: Record<string, { icon: string; bg: string; text: string; border: string }> = {
@@ -404,6 +427,23 @@ function App() {
     }
   });
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(() => {
+    try {
+      const saved = localStorage.getItem("camp-user-location");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [sortBy, setSortBy] = useState<"default" | "distance" | "price" | "date">("default");
+
+  // Persist user location to localStorage
+  useEffect(() => {
+    if (userLocation) {
+      localStorage.setItem("camp-user-location", JSON.stringify(userLocation));
+    }
+  }, [userLocation]);
 
   // Persist favorites to localStorage
   useEffect(() => {
@@ -443,6 +483,39 @@ function App() {
       }
       return next;
     });
+  };
+
+  const getNearMe = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setLocationLoading(false);
+        setSortBy("distance");
+      },
+      (error) => {
+        setLocationLoading(false);
+        if (error.code === error.PERMISSION_DENIED) {
+          alert("Location access denied. You can click on the map to set your location manually.");
+        } else {
+          alert("Unable to get your location. You can click on the map to set it manually.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const clearUserLocation = () => {
+    setUserLocation(null);
+    localStorage.removeItem("camp-user-location");
+    if (sortBy === "distance") setSortBy("default");
   };
 
   useEffect(() => {
@@ -513,7 +586,7 @@ function App() {
   const filteredCamps = useMemo(() => {
     if (!data) return [];
 
-    return data.camps.filter((camp) => {
+    let camps = data.camps.filter((camp) => {
       if (showFavoritesOnly && !favorites.has(camp.catalogId)) return false;
       if (filters.search) {
         const search = filters.search.toLowerCase();
@@ -534,7 +607,38 @@ function App() {
       if (filters.endHour !== null && camp.endTime.hour < filters.endHour) return false;
       return true;
     });
-  }, [data, filters, favorites, showFavoritesOnly]);
+
+    // Add distance to each camp if user location is set
+    const campsWithDistance = camps.map((camp) => {
+      let distance: number | null = null;
+      if (userLocation && camp.coordinates) {
+        distance = getDistanceMiles(
+          userLocation.lat,
+          userLocation.lng,
+          camp.coordinates.lat,
+          camp.coordinates.lng
+        );
+      }
+      return { ...camp, distance };
+    });
+
+    // Sort based on selected sort option
+    if (sortBy === "distance" && userLocation) {
+      campsWithDistance.sort((a, b) => {
+        if (a.distance === null) return 1;
+        if (b.distance === null) return -1;
+        return a.distance - b.distance;
+      });
+    } else if (sortBy === "price") {
+      campsWithDistance.sort((a, b) => a.fee - b.fee);
+    } else if (sortBy === "date") {
+      campsWithDistance.sort((a, b) =>
+        new Date(a.startDate.iso).getTime() - new Date(b.startDate.iso).getTime()
+      );
+    }
+
+    return campsWithDistance;
+  }, [data, filters, favorites, showFavoritesOnly, userLocation, sortBy]);
 
   const toggleFilter = (type: "categories" | "communities" | "dateRanges", value: string) => {
     setFilters((prev) => {
@@ -634,6 +738,66 @@ function App() {
               {showFavoritesOnly ? `Showing ${favorites.size} Favorites` : `Show ${favorites.size} Favorites`}
             </button>
           )}
+
+          {/* Location / Near Me */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-camp-bark/50 mb-2">
+              Your Location
+            </label>
+            {userLocation ? (
+              <div className="flex items-center gap-2">
+                <div className="flex-1 px-3 py-2.5 bg-camp-forest/10 border border-camp-forest/20 rounded-xl text-sm text-camp-forest flex items-center gap-2">
+                  <Crosshair className="w-4 h-4" />
+                  <span className="truncate">Location set</span>
+                </div>
+                <button
+                  onClick={clearUserLocation}
+                  className="p-2.5 bg-camp-warm border border-camp-sand rounded-xl text-camp-bark/50 hover:text-camp-bark hover:border-camp-bark/30 transition-all"
+                  title="Clear location"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={getNearMe}
+                disabled={locationLoading}
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-camp-forest hover:bg-camp-pine disabled:bg-camp-forest/50 text-white rounded-xl text-sm font-semibold transition-all"
+              >
+                {locationLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Getting location...
+                  </>
+                ) : (
+                  <>
+                    <Navigation className="w-4 h-4" />
+                    Near Me
+                  </>
+                )}
+              </button>
+            )}
+            <p className="text-[10px] text-camp-bark/50 mt-1.5">
+              {userLocation ? "Drag pin on map to adjust" : "Or click the map to set location"}
+            </p>
+          </div>
+
+          {/* Sort */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-camp-bark/50 mb-2">
+              Sort By
+            </label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              className="w-full px-3 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine transition-all hover:border-camp-terracotta/30 cursor-pointer"
+            >
+              <option value="default">Default</option>
+              <option value="distance" disabled={!userLocation}>Distance (nearest first)</option>
+              <option value="price">Price (lowest first)</option>
+              <option value="date">Date (earliest first)</option>
+            </select>
+          </div>
 
           {/* Search */}
           <div>
@@ -967,6 +1131,11 @@ function App() {
                 setFilters((prev) => ({ ...prev, locations: [loc] }));
                 setView("list");
               }}
+              userLocation={userLocation}
+              onSetUserLocation={(loc) => {
+                setUserLocation(loc);
+                setSortBy("distance");
+              }}
             />
           )}
           {view === "calendar" && (
@@ -1050,15 +1219,23 @@ function CampList({ camps, onSelect, favorites, onToggleFavorite }: { camps: Cam
               </div>
             </div>
 
-            {/* Category badge */}
-            {(() => {
-              const style = getCategoryStyle(camp.category);
-              return (
-                <span className={`inline-block px-2.5 py-1 ${style.bg} ${style.text} text-[10px] font-bold uppercase tracking-wider rounded-md mb-4`}>
-                  {camp.category}
+            {/* Category & Distance badges */}
+            <div className="flex items-center gap-2 mb-4">
+              {(() => {
+                const style = getCategoryStyle(camp.category);
+                return (
+                  <span className={`inline-block px-2.5 py-1 ${style.bg} ${style.text} text-[10px] font-bold uppercase tracking-wider rounded-md`}>
+                    {camp.category}
+                  </span>
+                );
+              })()}
+              {camp.distance !== null && camp.distance !== undefined && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-md">
+                  <Navigation className="w-3 h-3" />
+                  {camp.distance < 0.1 ? "< 0.1" : camp.distance.toFixed(1)} mi
                 </span>
-              );
-            })()}
+              )}
+            </div>
 
             {/* Details grid */}
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -1094,10 +1271,23 @@ function CampList({ camps, onSelect, favorites, onToggleFavorite }: { camps: Cam
   );
 }
 
-function CampMap({ camps, onSelect, onFilterLocation }: { camps: Camp[]; onSelect: (camp: Camp) => void; onFilterLocation: (location: string) => void }) {
+function CampMap({
+  camps,
+  onSelect,
+  onFilterLocation,
+  userLocation,
+  onSetUserLocation,
+}: {
+  camps: Camp[];
+  onSelect: (camp: Camp) => void;
+  onFilterLocation: (location: string) => void;
+  userLocation: { lat: number; lng: number } | null;
+  onSetUserLocation: (loc: { lat: number; lng: number }) => void;
+}) {
   const mapRef = React.useRef<HTMLDivElement>(null);
   const mapInstanceRef = React.useRef<any>(null);
   const markersRef = React.useRef<any[]>([]);
+  const userMarkerRef = React.useRef<any>(null);
   const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
@@ -1108,6 +1298,12 @@ function CampMap({ camps, onSelect, onFilterLocation }: { camps: Camp[]; onSelec
         const leaflet = (window as any).L;
         mapInstanceRef.current = leaflet.map(mapRef.current).setView([38.85, -77.3], 10);
         leaflet.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png").addTo(mapInstanceRef.current);
+
+        // Add click handler for setting user location
+        mapInstanceRef.current.on("click", (e: any) => {
+          onSetUserLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
+        });
+
         setMapReady(true);
       }
     };
@@ -1227,9 +1423,61 @@ function CampMap({ camps, onSelect, onFilterLocation }: { camps: Camp[]; onSelec
     }
   }, [camps, onSelect, onFilterLocation, mapReady]);
 
+  // User location marker
+  useEffect(() => {
+    const L = (window as any).L;
+    if (!mapReady || !mapInstanceRef.current || !L) return;
+
+    // Remove existing user marker
+    if (userMarkerRef.current) {
+      userMarkerRef.current.remove();
+      userMarkerRef.current = null;
+    }
+
+    if (!userLocation) return;
+
+    // Custom user location marker icon (blue/purple)
+    const userIcon = L.divIcon({
+      className: 'user-marker',
+      html: `<div style="position: relative; width: 36px; height: 36px;">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="18" cy="18" r="16" fill="#6366F1" stroke="#4F46E5" stroke-width="2"/>
+          <circle cx="18" cy="18" r="6" fill="white"/>
+        </svg>
+      </div>`,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+    });
+
+    const marker = L.marker([userLocation.lat, userLocation.lng], {
+      icon: userIcon,
+      draggable: true,
+      zIndexOffset: 1000,
+    }).addTo(mapInstanceRef.current);
+
+    marker.bindTooltip("Your location (drag to adjust)", {
+      permanent: false,
+      direction: "top",
+      offset: [0, -18],
+    });
+
+    marker.on("dragend", (e: any) => {
+      const { lat, lng } = e.target.getLatLng();
+      onSetUserLocation({ lat, lng });
+    });
+
+    userMarkerRef.current = marker;
+  }, [userLocation, mapReady, onSetUserLocation]);
+
   return (
     <div className="h-full w-full relative">
       <div id="map" ref={mapRef} className="h-full w-full" />
+      {!userLocation && (
+        <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto bg-white/95 backdrop-blur-sm rounded-xl shadow-camp p-3 text-sm text-camp-bark/70 flex items-center gap-2">
+          <Crosshair className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+          <span>Click anywhere on the map to set your location</span>
+        </div>
+      )}
     </div>
   );
 }
