@@ -19,6 +19,10 @@ import {
   Users,
   SlidersHorizontal,
   Heart,
+  ClipboardList,
+  Printer,
+  Check,
+  AlertCircle,
 } from "lucide-react";
 
 interface ParsedDate {
@@ -169,6 +173,10 @@ const Icons = {
   filter: <SlidersHorizontal className="w-5 h-5" strokeWidth={2} />,
   heart: <Heart className="w-5 h-5" strokeWidth={2} />,
   heartFilled: <Heart className="w-5 h-5" fill="currentColor" strokeWidth={0} />,
+  planner: <ClipboardList className="w-5 h-5" strokeWidth={2} />,
+  printer: <Printer className="w-5 h-5" strokeWidth={2} />,
+  check: <Check className="w-4 h-4" strokeWidth={2} />,
+  alert: <AlertCircle className="w-4 h-4" strokeWidth={2} />,
 };
 
 function App() {
@@ -178,11 +186,21 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     return paramsToFilters(params);
   });
-  const [view, setView] = useState<"list" | "map" | "calendar">(() => {
+  const [view, setView] = useState<"list" | "map" | "calendar" | "planner">(() => {
     const params = new URLSearchParams(window.location.search);
     const v = params.get("view");
-    if (v === "map" || v === "calendar") return v;
+    if (v === "map" || v === "calendar" || v === "planner") return v;
     return "list";
+  });
+  const [plannedCamps, setPlannedCamps] = useState<Map<string, Camp>>(() => {
+    try {
+      const saved = localStorage.getItem("camp-planner");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return new Map(Object.entries(parsed));
+      }
+    } catch {}
+    return new Map();
   });
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -201,6 +219,27 @@ function App() {
     localStorage.setItem("camp-favorites", JSON.stringify([...favorites]));
   }, [favorites]);
 
+  // Persist planned camps to localStorage
+  useEffect(() => {
+    const obj: Record<string, Camp> = {};
+    plannedCamps.forEach((camp, week) => {
+      obj[week] = camp;
+    });
+    localStorage.setItem("camp-planner", JSON.stringify(obj));
+  }, [plannedCamps]);
+
+  const setPlannerCamp = (week: string, camp: Camp | null) => {
+    setPlannedCamps((prev) => {
+      const next = new Map(prev);
+      if (camp === null) {
+        next.delete(week);
+      } else {
+        next.set(week, camp);
+      }
+      return next;
+    });
+  };
+
   const toggleFavorite = (catalogId: string) => {
     setFavorites((prev) => {
       const next = new Set(prev);
@@ -217,6 +256,7 @@ function App() {
     const params = filtersToParams(filters);
     if (view === "map") params.set("view", "map");
     if (view === "calendar") params.set("view", "calendar");
+    if (view === "planner") params.set("view", "planner");
     const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
     window.history.replaceState({}, "", newUrl);
   }, [filters, view]);
@@ -660,6 +700,17 @@ function App() {
               {Icons.calendar}
               <span className="hidden sm:inline">Calendar</span>
             </button>
+            <button
+              onClick={() => setView("planner")}
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                view === "planner"
+                  ? "bg-white text-camp-pine shadow-camp"
+                  : "text-camp-bark/60 hover:text-camp-bark"
+              }`}
+            >
+              {Icons.planner}
+              <span className="hidden sm:inline">Planner</span>
+            </button>
           </div>
         </div>
 
@@ -680,6 +731,15 @@ function App() {
           )}
           {view === "calendar" && (
             <CampCalendar camps={filteredCamps} onSelect={setSelectedCamp} />
+          )}
+          {view === "planner" && data && (
+            <MultiWeekPlanner
+              camps={filteredCamps}
+              allCamps={data.camps}
+              plannedCamps={plannedCamps}
+              onPlanCamp={setPlannerCamp}
+              onSelect={setSelectedCamp}
+            />
           )}
         </div>
       </main>
@@ -1082,6 +1142,295 @@ function CampCalendar({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Cam
         {/* Summary footer */}
         <div className="mt-8 text-center text-camp-bark/50 text-sm">
           <p>{camps.length} camps across {campsByWeek.length} weeks</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface MultiWeekPlannerProps {
+  camps: Camp[];
+  allCamps: Camp[];
+  plannedCamps: Map<string, Camp>;
+  onPlanCamp: (week: string, camp: Camp | null) => void;
+  onSelect: (camp: Camp) => void;
+}
+
+function MultiWeekPlanner({ camps, allCamps, plannedCamps, onPlanCamp, onSelect }: MultiWeekPlannerProps) {
+  const [expandedWeek, setExpandedWeek] = useState<string | null>(null);
+  const [plannerSearch, setPlannerSearch] = useState("");
+
+  // Get all unique weeks from ALL camps (not just filtered) sorted chronologically
+  const allWeeks = useMemo(() => {
+    const weekMap = new Map<string, { dateRange: string; startDate: ParsedDate; endDate: ParsedDate }>();
+    allCamps.forEach((camp) => {
+      if (!weekMap.has(camp.dateRange)) {
+        weekMap.set(camp.dateRange, {
+          dateRange: camp.dateRange,
+          startDate: camp.startDate,
+          endDate: camp.endDate,
+        });
+      }
+    });
+    return Array.from(weekMap.values()).sort(
+      (a, b) => new Date(a.startDate.iso).getTime() - new Date(b.startDate.iso).getTime()
+    );
+  }, [allCamps]);
+
+  // Get camps available for each week (from filtered camps)
+  const campsByWeek = useMemo(() => {
+    const grouped = new Map<string, Camp[]>();
+    camps.forEach((camp) => {
+      if (!grouped.has(camp.dateRange)) {
+        grouped.set(camp.dateRange, []);
+      }
+      grouped.get(camp.dateRange)!.push(camp);
+    });
+    return grouped;
+  }, [camps]);
+
+  // Calculate totals
+  const totalCost = useMemo(() => {
+    let total = 0;
+    plannedCamps.forEach((camp) => {
+      total += camp.fee;
+    });
+    return total;
+  }, [plannedCamps]);
+
+  const weeksPlanned = plannedCamps.size;
+  const weeksCovered = allWeeks.filter((w) => plannedCamps.has(w.dateRange)).length;
+  const weeksWithGaps = allWeeks.length - weeksCovered;
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="h-full overflow-y-auto p-4 sm:p-6 bg-gradient-to-b from-camp-cream to-camp-warm">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-6 text-center">
+          <h2 className="font-display text-2xl font-bold text-camp-pine mb-2">Summer Planner</h2>
+          <p className="text-camp-bark/60 text-sm">Select one camp per week to build your summer schedule</p>
+        </div>
+
+        {/* Summary Card */}
+        <div className="bg-white rounded-2xl shadow-camp p-4 sm:p-6 mb-6 print:shadow-none print:border print:border-gray-200">
+          <div className="grid grid-cols-3 gap-4 text-center mb-4">
+            <div>
+              <div className="text-2xl sm:text-3xl font-display font-bold text-camp-forest">{weeksPlanned}</div>
+              <div className="text-xs text-camp-bark/60">Weeks Planned</div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-display font-bold text-camp-terracotta">${totalCost}</div>
+              <div className="text-xs text-camp-bark/60">Total Cost</div>
+            </div>
+            <div>
+              <div className={`text-2xl sm:text-3xl font-display font-bold ${weeksWithGaps > 0 ? 'text-amber-500' : 'text-camp-forest'}`}>
+                {weeksWithGaps}
+              </div>
+              <div className="text-xs text-camp-bark/60">Weeks with Gaps</div>
+            </div>
+          </div>
+
+          {weeksPlanned > 0 && (
+            <button
+              onClick={handlePrint}
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-camp-warm hover:bg-camp-sand rounded-xl text-sm font-medium text-camp-bark/70 transition-colors print:hidden"
+            >
+              {Icons.printer}
+              Print / Save Plan
+            </button>
+          )}
+        </div>
+
+        {/* Week Grid */}
+        <div className="space-y-3">
+          {allWeeks.map((week, i) => {
+            const plannedCamp = plannedCamps.get(week.dateRange);
+            const availableCamps = campsByWeek.get(week.dateRange) || [];
+            const isExpanded = expandedWeek === week.dateRange;
+            const hasAvailableCamps = availableCamps.length > 0;
+
+            return (
+              <div
+                key={week.dateRange}
+                className={`bg-white rounded-2xl shadow-camp overflow-hidden transition-all animate-slide-up opacity-0 stagger-${Math.min(i + 1, 6)} print:shadow-none print:border print:border-gray-200`}
+                style={{ animationFillMode: 'forwards' }}
+              >
+                {/* Week Row */}
+                <div
+                  className={`px-4 py-3 flex items-center justify-between gap-3 ${
+                    plannedCamp ? 'bg-camp-forest/5' : ''
+                  }`}
+                >
+                  {/* Week info */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      plannedCamp ? 'bg-camp-forest text-white' : 'bg-camp-sand text-camp-bark/50'
+                    }`}>
+                      <span className="font-display font-bold text-sm">{week.startDate.day}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-camp-pine text-sm truncate">
+                        {week.startDate.monthName} {week.startDate.day} - {week.endDate.monthName} {week.endDate.day}
+                      </h3>
+                      {plannedCamp ? (
+                        <p className="text-xs text-camp-forest font-medium truncate">{plannedCamp.title}</p>
+                      ) : (
+                        <p className="text-xs text-camp-bark/50">
+                          {hasAvailableCamps ? `${availableCamps.length} camps available` : 'No camps match filters'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {plannedCamp && (
+                      <span className="px-2 py-1 bg-camp-terracotta text-white text-xs font-bold rounded print:bg-gray-100 print:text-gray-800">
+                        ${plannedCamp.fee}
+                      </span>
+                    )}
+                    {plannedCamp ? (
+                      <button
+                        onClick={() => onPlanCamp(week.dateRange, null)}
+                        className="p-2 text-camp-bark/40 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors print:hidden"
+                        title="Remove from plan"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    ) : hasAvailableCamps ? (
+                      <button
+                        onClick={() => {
+                          setExpandedWeek(isExpanded ? null : week.dateRange);
+                          if (isExpanded) setPlannerSearch("");
+                        }}
+                        className="px-3 py-1.5 bg-camp-forest text-white text-xs font-semibold rounded-lg hover:bg-camp-pine transition-colors print:hidden"
+                      >
+                        {isExpanded ? 'Close' : 'Select'}
+                      </button>
+                    ) : (
+                      <span className="px-3 py-1.5 bg-camp-sand text-camp-bark/40 text-xs font-medium rounded-lg print:hidden">
+                        No options
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Expanded camp selection */}
+                {isExpanded && hasAvailableCamps && (() => {
+                  const searchLower = plannerSearch.toLowerCase();
+                  const filteredCamps = plannerSearch
+                    ? availableCamps.filter((c) =>
+                        c.title.toLowerCase().includes(searchLower) ||
+                        c.category.toLowerCase().includes(searchLower) ||
+                        c.location.toLowerCase().includes(searchLower)
+                      )
+                    : availableCamps;
+
+                  return (
+                    <div className="border-t border-camp-sand p-3 bg-camp-warm/50 print:hidden">
+                      {/* Search input */}
+                      <div className="relative mb-3">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-camp-bark/40">
+                          {Icons.search}
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Search camps..."
+                          value={plannerSearch}
+                          onChange={(e) => setPlannerSearch(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 bg-white border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30 focus:border-camp-terracotta/50"
+                        />
+                      </div>
+
+                      {filteredCamps.length === 0 ? (
+                        <div className="text-center py-4 text-camp-bark/50 text-sm">
+                          No camps match "{plannerSearch}"
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                          {filteredCamps.map((camp, j) => {
+                            const style = getCategoryStyle(camp.category);
+                            return (
+                              <div
+                                key={`${camp.catalogId}-${j}`}
+                                className="bg-white rounded-xl p-3 border border-camp-sand hover:border-camp-terracotta/30 transition-all"
+                              >
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                  <h4
+                                    onClick={() => onSelect(camp)}
+                                    className="font-semibold text-camp-pine text-sm leading-tight cursor-pointer hover:text-camp-terracotta transition-colors line-clamp-2"
+                                  >
+                                    {camp.title}
+                                  </h4>
+                                  <span className="flex-shrink-0 px-2 py-0.5 bg-camp-terracotta text-white text-xs font-bold rounded">
+                                    ${camp.fee}
+                                  </span>
+                                </div>
+                                <span className={`inline-block px-2 py-0.5 ${style.bg} ${style.text} text-[10px] font-bold uppercase tracking-wider rounded mb-2`}>
+                                  {camp.category}
+                                </span>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2 text-xs text-camp-bark/60">
+                                    <span className="flex items-center gap-1">
+                                      {Icons.clock}
+                                      {camp.startTime.formatted}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      {Icons.user}
+                                      {camp.minAge}-{camp.maxAge}
+                                    </span>
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      onPlanCamp(week.dateRange, camp);
+                                      setExpandedWeek(null);
+                                      setPlannerSearch("");
+                                    }}
+                                    className="px-2 py-1 bg-camp-forest text-white text-xs font-semibold rounded hover:bg-camp-pine transition-colors"
+                                  >
+                                    Add
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Print-only summary */}
+        <div className="hidden print:block mt-8 pt-4 border-t border-gray-200">
+          <h3 className="font-display font-bold text-lg mb-2">Planned Camps Summary</h3>
+          <ul className="space-y-1 text-sm">
+            {allWeeks.map((week) => {
+              const camp = plannedCamps.get(week.dateRange);
+              return (
+                <li key={week.dateRange} className="flex justify-between">
+                  <span>{week.startDate.monthName} {week.startDate.day}:</span>
+                  <span className="font-medium">{camp ? `${camp.title} - $${camp.fee}` : '—'}</span>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="mt-4 pt-2 border-t border-gray-200 font-bold flex justify-between">
+            <span>Total:</span>
+            <span>${totalCost}</span>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center text-camp-bark/50 text-sm print:hidden">
+          <p>{allWeeks.length} weeks of summer · {camps.length} camps available with current filters</p>
         </div>
       </div>
     </div>
