@@ -18,6 +18,7 @@ import {
   Sparkles,
   Users,
   SlidersHorizontal,
+  Heart,
 } from "lucide-react";
 
 interface ParsedDate {
@@ -166,6 +167,8 @@ const Icons = {
   chevronDown: <ChevronDown className="w-4 h-4" strokeWidth={2} />,
   sparkles: <Sparkles className="w-5 h-5" fill="currentColor" strokeWidth={0} />,
   filter: <SlidersHorizontal className="w-5 h-5" strokeWidth={2} />,
+  heart: <Heart className="w-5 h-5" strokeWidth={2} />,
+  heartFilled: <Heart className="w-5 h-5" fill="currentColor" strokeWidth={0} />,
 };
 
 function App() {
@@ -181,6 +184,32 @@ function App() {
   });
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem("camp-favorites");
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+
+  // Persist favorites to localStorage
+  useEffect(() => {
+    localStorage.setItem("camp-favorites", JSON.stringify([...favorites]));
+  }, [favorites]);
+
+  const toggleFavorite = (catalogId: string) => {
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (next.has(catalogId)) {
+        next.delete(catalogId);
+      } else {
+        next.add(catalogId);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const params = filtersToParams(filters);
@@ -202,6 +231,7 @@ function App() {
     if (!data) return [];
 
     return data.camps.filter((camp) => {
+      if (showFavoritesOnly && !favorites.has(camp.catalogId)) return false;
       if (filters.search) {
         const search = filters.search.toLowerCase();
         const matchesSearch =
@@ -221,7 +251,7 @@ function App() {
       if (filters.endHour !== null && camp.endTime.hour < filters.endHour) return false;
       return true;
     });
-  }, [data, filters]);
+  }, [data, filters, favorites, showFavoritesOnly]);
 
   const toggleFilter = (type: "categories" | "communities" | "dateRanges", value: string) => {
     setFilters((prev) => {
@@ -307,6 +337,21 @@ function App() {
 
         {/* Filters */}
         <div className="flex-1 overflow-y-auto p-4 space-y-5">
+          {/* Favorites Toggle */}
+          {favorites.size > 0 && (
+            <button
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                showFavoritesOnly
+                  ? "bg-rose-500 text-white"
+                  : "bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100"
+              }`}
+            >
+              <Heart className="w-4 h-4" fill={showFavoritesOnly ? "currentColor" : "none"} />
+              {showFavoritesOnly ? `Showing ${favorites.size} Favorites` : `Show ${favorites.size} Favorites`}
+            </button>
+          )}
+
           {/* Search */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-camp-bark/50 mb-2">
@@ -607,7 +652,7 @@ function App() {
         {/* Content */}
         <div className="flex-1 overflow-hidden relative">
           {view === "list" ? (
-            <CampList camps={filteredCamps} onSelect={setSelectedCamp} />
+            <CampList camps={filteredCamps} onSelect={setSelectedCamp} favorites={favorites} onToggleFavorite={toggleFavorite} />
           ) : (
             <CampMap
               camps={filteredCamps}
@@ -629,7 +674,7 @@ function App() {
   );
 }
 
-function CampList({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Camp) => void }) {
+function CampList({ camps, onSelect, favorites, onToggleFavorite }: { camps: Camp[]; onSelect: (camp: Camp) => void; favorites: Set<string>; onToggleFavorite: (id: string) => void }) {
   if (camps.length === 0) {
     return (
       <div className="h-full flex items-center justify-center p-8">
@@ -657,10 +702,23 @@ function CampList({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Camp) =
             style={{ animationFillMode: 'forwards' }}
           >
             {/* Header */}
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <h3 className="font-display font-bold text-camp-pine leading-snug group-hover:text-camp-terracotta transition-colors">
+            <div className="flex items-start justify-between gap-2 mb-3">
+              <h3 className="font-display font-bold text-camp-pine leading-snug group-hover:text-camp-terracotta transition-colors flex-1">
                 {camp.title}
               </h3>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(camp.catalogId);
+                }}
+                className={`flex-shrink-0 p-1.5 rounded-lg transition-all ${
+                  favorites.has(camp.catalogId)
+                    ? "text-rose-500 hover:bg-rose-50"
+                    : "text-camp-bark/30 hover:text-rose-400 hover:bg-rose-50"
+                }`}
+              >
+                <Heart className="w-5 h-5" fill={favorites.has(camp.catalogId) ? "currentColor" : "none"} />
+              </button>
               <div className="flex-shrink-0 px-3 py-1 bg-gradient-to-r from-camp-terracotta to-camp-terracotta-dark text-white font-bold text-sm rounded-lg shadow-sm">
                 ${camp.fee}
               </div>
