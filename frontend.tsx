@@ -927,6 +927,20 @@ function CampMap({ camps, onSelect, onFilterLocation }: { camps: Camp[]; onSelec
 }
 
 function CampCalendar({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Camp) => void }) {
+  const [collapsedWeeks, setCollapsedWeeks] = useState<Set<string>>(new Set());
+
+  const toggleWeek = (dateRange: string) => {
+    setCollapsedWeeks((prev) => {
+      const next = new Set(prev);
+      if (next.has(dateRange)) {
+        next.delete(dateRange);
+      } else {
+        next.add(dateRange);
+      }
+      return next;
+    });
+  };
+
   // Group camps by week (dateRange)
   const campsByWeek = useMemo(() => {
     const grouped = new Map<string, Camp[]>();
@@ -994,24 +1008,33 @@ function CampCalendar({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Cam
                 style={{ animationFillMode: 'forwards' }}
               >
                 {/* Week header */}
-                <div className="bg-gradient-to-r from-camp-forest to-camp-forest-light px-4 sm:px-6 py-3 flex items-center justify-between">
+                <button
+                  onClick={() => toggleWeek(dateRange)}
+                  className="w-full bg-gradient-to-r from-camp-forest to-camp-forest-light px-4 sm:px-6 py-3 flex items-center justify-between cursor-pointer hover:from-camp-forest-light hover:to-camp-forest transition-all"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
                       <span className="text-white font-display font-bold text-lg">{weekStart.day}</span>
                     </div>
-                    <div>
+                    <div className="text-left">
                       <h3 className="font-display font-bold text-white">
                         {weekStart.monthName} {weekStart.day} - {firstCamp.endDate.monthName} {firstCamp.endDate.day}
                       </h3>
                       <p className="text-white/70 text-xs">Week of {weekStart.monthName} {weekStart.day}</p>
                     </div>
                   </div>
-                  <div className="bg-white/20 px-3 py-1 rounded-full">
-                    <span className="text-white text-sm font-semibold">{weekCamps.length} camps</span>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 px-3 py-1 rounded-full">
+                      <span className="text-white text-sm font-semibold">{weekCamps.length} camps</span>
+                    </div>
+                    <ChevronDown
+                      className={`w-5 h-5 text-white transition-transform ${collapsedWeeks.has(dateRange) ? '-rotate-90' : ''}`}
+                    />
                   </div>
-                </div>
+                </button>
 
                 {/* Camp cards for this week */}
+                {!collapsedWeeks.has(dateRange) && (
                 <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {weekCamps.map((camp, i) => {
                     const style = getCategoryStyle(camp.category);
@@ -1050,6 +1073,7 @@ function CampCalendar({ camps, onSelect }: { camps: Camp[]; onSelect: (camp: Cam
                     );
                   })}
                 </div>
+                )}
               </div>
             );
           })}
