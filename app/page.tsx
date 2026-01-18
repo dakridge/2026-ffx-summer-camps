@@ -26,7 +26,7 @@ import {
   Check,
 } from "lucide-react";
 import { Camp, CampsData, Filters } from "./lib/types";
-import { Icons, getCategoryStyle } from "./lib/utils";
+import { Icons, getCategoryStyle, formatTime } from "./lib/utils";
 import { useGeolocation, usePersistentSet, useCampFiltering } from "./lib/hooks";
 import { CampList } from "./components";
 
@@ -1471,7 +1471,7 @@ function CampModal({
                 </span>
               </div>
               <p className="font-semibold text-camp-pine text-sm sm:text-base">
-                {camp.startTime.formatted} - {camp.endTime.formatted}
+                {formatTime(camp.startTime)} - {formatTime(camp.endTime)}
               </p>
               <p className="text-xs sm:text-sm text-camp-bark/60">
                 {camp.durationHours} hours

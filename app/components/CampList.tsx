@@ -3,7 +3,7 @@
 import React, { memo } from "react";
 import { Heart, Navigation, CalendarPlus, Check, Minus } from "lucide-react";
 import { Camp } from "../lib/types";
-import { Icons, getCategoryStyle } from "../lib/utils";
+import { Icons, getCategoryStyle, formatTime } from "../lib/utils";
 
 interface CampListProps {
   camps: Camp[];
@@ -148,7 +148,7 @@ export const CampList = memo(function CampList({
               <div className="flex items-start gap-2">
                 <div className="mt-0.5 text-camp-sun">{Icons.clock}</div>
                 <div className="text-camp-bark/70 text-xs">
-                  {camp.startTime.formatted} - {camp.endTime.formatted}
+                  {formatTime(camp.startTime)} - {formatTime(camp.endTime)}
                 </div>
               </div>
               <div className="flex items-start gap-2">

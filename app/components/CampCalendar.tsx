@@ -3,7 +3,7 @@
 import React, { useState, useMemo, memo } from "react";
 import { ChevronDown, Navigation, CalendarPlus, Check, Minus } from "lucide-react";
 import { Camp } from "../lib/types";
-import { Icons, getCategoryStyle } from "../lib/utils";
+import { Icons, getCategoryStyle, formatTime } from "../lib/utils";
 
 interface CampCalendarProps {
   camps: Camp[];
@@ -159,7 +159,7 @@ export const CampCalendar = memo(function CampCalendar({ camps, onSelect, planne
                               onSelect(camp);
                             }
                           }}
-                          aria-label={`${camp.title}, $${camp.fee}, ${camp.startTime.formatted}, Ages ${camp.minAge}-${camp.maxAge}`}
+                          aria-label={`${camp.title}, $${camp.fee}, ${formatTime(camp.startTime)}, Ages ${camp.minAge}-${camp.maxAge}`}
                           className="group bg-camp-warm hover:bg-camp-sand rounded-xl p-3 cursor-pointer transition-all hover:shadow-camp border border-transparent hover:border-camp-terracotta/20 focus:outline-none focus:ring-2 focus:ring-camp-terracotta"
                         >
                           <div className="flex items-start justify-between gap-2 mb-2">
@@ -186,7 +186,7 @@ export const CampCalendar = memo(function CampCalendar({ camps, onSelect, planne
                           <div className="flex items-center gap-3 text-xs text-camp-bark/60">
                             <span className="flex items-center gap-1">
                               {Icons.clock}
-                              {camp.startTime.formatted}
+                              {formatTime(camp.startTime)}
                             </span>
                             <span className="flex items-center gap-1">
                               {Icons.user}

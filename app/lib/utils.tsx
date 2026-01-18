@@ -125,6 +125,14 @@ export function getCategoryStyle(category: string) {
   );
 }
 
+// Format time in 12-hour format with am/pm
+export function formatTime(time: { hour: number; minute: number }): string {
+  const hour12 = time.hour === 0 ? 12 : time.hour > 12 ? time.hour - 12 : time.hour;
+  const period = time.hour >= 12 ? "pm" : "am";
+  const minutes = time.minute.toString().padStart(2, "0");
+  return `${hour12}:${minutes}${period}`;
+}
+
 // Icon wrapper components for consistent sizing
 export const Icons = {
   search: <Search className="w-5 h-5" strokeWidth={2} />,

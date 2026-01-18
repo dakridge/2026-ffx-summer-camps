@@ -11,7 +11,7 @@ import {
   pdf,
 } from "@react-pdf/renderer";
 import { Camp, ParsedDate } from "../lib/types";
-import { Icons, getCategoryStyle } from "../lib/utils";
+import { Icons, getCategoryStyle, formatTime } from "../lib/utils";
 
 // PDF Styles
 const pdfStyles = StyleSheet.create({
@@ -177,8 +177,8 @@ function PlannerPDF({ weeks, plannedCamps, totalCost, totalCamps }: PlannerPDFPr
                     <View key={camp.catalogId} style={idx > 0 ? { marginTop: 4 } : {}}>
                       <Text style={pdfStyles.weekCampTitle}>{camp.title}</Text>
                       <Text style={pdfStyles.weekCampDetails}>
-                        {camp.location} · {camp.startTime.formatted} -{" "}
-                        {camp.endTime.formatted} · Ages {camp.minAge}-
+                        {camp.location} · {formatTime(camp.startTime)} -{" "}
+                        {formatTime(camp.endTime)} · Ages {camp.minAge}-
                         {camp.maxAge} · ${camp.fee}
                       </Text>
                     </View>
@@ -547,7 +547,7 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
                             {camp.title}
                           </button>
                           <p className="text-xs text-camp-bark/60">
-                            {camp.location} · {camp.startTime.formatted} - {camp.endTime.formatted}
+                            {camp.location} · {formatTime(camp.startTime)} - {formatTime(camp.endTime)}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -661,7 +661,7 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
                                       <span className="flex items-center gap-1">
                                         <span aria-hidden="true">{Icons.clock}</span>
                                         <span className="sr-only">Time:</span>
-                                        {camp.startTime.formatted}
+                                        {formatTime(camp.startTime)}
                                       </span>
                                       <span className="flex items-center gap-1">
                                         <span aria-hidden="true">{Icons.user}</span>
