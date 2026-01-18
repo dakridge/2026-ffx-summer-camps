@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback, useDeferredValue, Suspense, lazy } from "react";
+import React, { useState, useEffect, useCallback, Suspense, lazy } from "react";
 import {
   Search,
   MapPin,
@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Camp, CampsData, Filters } from "./lib/types";
 import { Icons, getCategoryStyle } from "./lib/utils";
+import { useGeolocation, usePersistentSet, useCampFiltering } from "./lib/hooks";
 import { CampList } from "./components";
 
 // Lazy load heavy components that aren't immediately visible
@@ -59,26 +60,6 @@ const initialFilters: Filters = {
   fromDate: null,
   toDate: null,
 };
-
-// Haversine distance calculation (returns miles)
-function getDistanceMiles(
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number
-): number {
-  const R = 3959; // Earth's radius in miles
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
 
 // URL params helpers
 function filtersToParams(filters: Filters): URLSearchParams {
@@ -127,51 +108,42 @@ export default function HomePage() {
   const [isSharedPlan, setIsSharedPlan] = useState(false);
   const [selectedCamp, setSelectedCamp] = useState<Camp | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [userLocation, setUserLocation] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-  const [locationLoading, setLocationLoading] = useState(false);
   const [sortBy, setSortBy] = useState<
     "default" | "distance" | "price" | "priceDesc" | "date" | "name"
   >("default");
 
-  // Defer filter values so typing remains responsive while filtering is computed in background
-  const deferredFilters = useDeferredValue(filters);
-  const deferredSortBy = useDeferredValue(sortBy);
+  // Custom hooks for persistent state and geolocation
+  const [favorites, setFavorites] = usePersistentSet("camp-favorites");
 
-  // Initialize state from URL params and localStorage on mount
+  const {
+    location: userLocation,
+    loading: locationLoading,
+    error: locationError,
+    requestLocation,
+    setLocation: setUserLocation,
+    clearLocation: clearUserLocation,
+  } = useGeolocation({
+    onLocationChange: (loc) => {
+      if (loc) setSortBy("distance");
+    },
+  });
+
+  // Show geolocation errors
+  useEffect(() => {
+    if (locationError) {
+      alert(locationError + ". You can click on the map to set your location manually.");
+    }
+  }, [locationError]);
+
+  // Initialize state from URL params on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setFilters(paramsToFilters(params));
 
     const v = params.get("view");
     if (v === "map" || v === "calendar" || v === "planner") setView(v);
-
-    try {
-      const savedFavorites = localStorage.getItem("camp-favorites");
-      if (savedFavorites) setFavorites(new Set(JSON.parse(savedFavorites)));
-    } catch {}
-
-    try {
-      const savedLocation = localStorage.getItem("camp-user-location");
-      if (savedLocation) setUserLocation(JSON.parse(savedLocation));
-    } catch {}
   }, []);
-
-  // Persist user location to localStorage
-  useEffect(() => {
-    if (userLocation) {
-      localStorage.setItem("camp-user-location", JSON.stringify(userLocation));
-    }
-  }, [userLocation]);
-
-  // Persist favorites to localStorage
-  useEffect(() => {
-    localStorage.setItem("camp-favorites", JSON.stringify([...favorites]));
-  }, [favorites]);
 
   // Persist planned camps to localStorage (skip while loading or viewing shared plan)
   useEffect(() => {
@@ -206,44 +178,16 @@ export default function HomePage() {
       }
       return next;
     });
-  }, []);
+  }, [setFavorites]);
 
   const getNearMe = useCallback(() => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
-    }
-    setLocationLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-        setLocationLoading(false);
-        setSortBy("distance");
-      },
-      (error) => {
-        setLocationLoading(false);
-        if (error.code === error.PERMISSION_DENIED) {
-          alert(
-            "Location access denied. You can click on the map to set your location manually."
-          );
-        } else {
-          alert(
-            "Unable to get your location. You can click on the map to set it manually."
-          );
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  }, []);
+    requestLocation();
+  }, [requestLocation]);
 
-  const clearUserLocation = useCallback(() => {
-    setUserLocation(null);
-    localStorage.removeItem("camp-user-location");
+  const handleClearLocation = useCallback(() => {
+    clearUserLocation();
     setSortBy((current) => current === "distance" ? "default" : current);
-  }, []);
+  }, [clearUserLocation]);
 
   // Debounce URL updates to avoid lag when typing
   useEffect(() => {
@@ -313,87 +257,15 @@ export default function HomePage() {
       });
   }, []);
 
-  const filteredCamps = useMemo(() => {
-    if (!data) return [];
-
-    let camps = data.camps.filter((camp) => {
-      if (showFavoritesOnly && !favorites.has(camp.catalogId)) return false;
-      if (deferredFilters.search) {
-        const search = deferredFilters.search.toLowerCase();
-        const matchesSearch =
-          camp.title.toLowerCase().includes(search) ||
-          camp.location.toLowerCase().includes(search) ||
-          camp.catalogId.toLowerCase().includes(search);
-        if (!matchesSearch) return false;
-      }
-      if (
-        deferredFilters.categories.length > 0 &&
-        !deferredFilters.categories.includes(camp.category)
-      )
-        return false;
-      if (
-        deferredFilters.communities.length > 0 &&
-        !deferredFilters.communities.includes(camp.community)
-      )
-        return false;
-      if (
-        deferredFilters.locations.length > 0 &&
-        !deferredFilters.locations.includes(camp.location)
-      )
-        return false;
-      if (
-        deferredFilters.dateRanges.length > 0 &&
-        !deferredFilters.dateRanges.includes(camp.dateRange)
-      )
-        return false;
-      if (deferredFilters.childAge !== null && (camp.minAge > deferredFilters.childAge || camp.maxAge < deferredFilters.childAge)) return false;
-      if (deferredFilters.maxFee !== null && camp.fee > deferredFilters.maxFee) return false;
-      if (deferredFilters.startHour !== null && camp.startTime.hour > deferredFilters.startHour)
-        return false;
-      if (deferredFilters.endHour !== null && camp.endTime.hour < deferredFilters.endHour)
-        return false;
-      if (deferredFilters.fromDate !== null && camp.startDate.iso < deferredFilters.fromDate)
-        return false;
-      if (deferredFilters.toDate !== null && camp.startDate.iso > deferredFilters.toDate)
-        return false;
-      return true;
-    });
-
-    const campsWithDistance = camps.map((camp) => {
-      let distance: number | null = null;
-      if (userLocation && camp.coordinates) {
-        distance = getDistanceMiles(
-          userLocation.lat,
-          userLocation.lng,
-          camp.coordinates.lat,
-          camp.coordinates.lng
-        );
-      }
-      return { ...camp, distance };
-    });
-
-    if (deferredSortBy === "distance" && userLocation) {
-      campsWithDistance.sort((a, b) => {
-        if (a.distance === null) return 1;
-        if (b.distance === null) return -1;
-        return a.distance - b.distance;
-      });
-    } else if (deferredSortBy === "price") {
-      campsWithDistance.sort((a, b) => a.fee - b.fee);
-    } else if (deferredSortBy === "priceDesc") {
-      campsWithDistance.sort((a, b) => b.fee - a.fee);
-    } else if (deferredSortBy === "date") {
-      campsWithDistance.sort(
-        (a, b) =>
-          new Date(a.startDate.iso).getTime() -
-          new Date(b.startDate.iso).getTime()
-      );
-    } else if (deferredSortBy === "name") {
-      campsWithDistance.sort((a, b) => a.title.localeCompare(b.title));
-    }
-
-    return campsWithDistance;
-  }, [data, deferredFilters, favorites, showFavoritesOnly, userLocation, deferredSortBy]);
+  // Use custom hook for filtering and sorting
+  const filteredCamps = useCampFiltering({
+    camps: data?.camps ?? [],
+    filters,
+    sortBy,
+    userLocation,
+    favorites,
+    showFavoritesOnly,
+  });
 
   const toggleFilter = (
     type: "categories" | "communities" | "dateRanges",
@@ -611,7 +483,7 @@ export default function HomePage() {
                   <span className="truncate">Location set</span>
                 </div>
                 <button
-                  onClick={clearUserLocation}
+                  onClick={handleClearLocation}
                   aria-label="Clear location"
                   className="p-2.5 bg-camp-warm border border-camp-sand rounded-xl text-camp-bark/50 hover:text-camp-bark hover:border-camp-bark/30 transition-all focus:outline-none focus:ring-2 focus:ring-camp-terracotta"
                 >

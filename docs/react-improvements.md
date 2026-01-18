@@ -64,10 +64,10 @@ Checklist for improving this codebase against React best practices.
 - [x] Add `Suspense` boundaries with loading fallbacks
 
 ### Custom Hooks
-- [ ] Create `useGeolocation()` hook
-- [ ] Create `usePersistentState()` hook for localStorage sync
-- [ ] Create `useLeaflet()` hook (consolidate duplicated loading)
-- [ ] Create `useCampFiltering()` hook
+- [x] Create `useGeolocation()` hook
+- [x] Create `usePersistentState()` hook for localStorage sync
+- [x] Create `useLeaflet()` hook (consolidate duplicated loading)
+- [x] Create `useCampFiltering()` hook
 
 ### TypeScript
 - [ ] Install `@types/leaflet`
@@ -107,11 +107,11 @@ Checklist for improving this codebase against React best practices.
 | Performance | 10 | 10 | 0 |
 | State Management | 2 | 0 | 2 |
 | Code Splitting | 4 | 4 | 0 |
-| Custom Hooks | 4 | 0 | 4 |
+| Custom Hooks | 4 | 4 | 0 |
 | TypeScript | 4 | 0 | 4 |
 | Map Optimization | 2 | 0 | 2 |
 | Code Quality | 4 | 0 | 4 |
-| **Total** | **51** | **29** | **22** |
+| **Total** | **51** | **33** | **18** |
 
 
 ## Recommended Next Steps
@@ -121,4 +121,5 @@ Checklist for improving this codebase against React best practices.
   3. ~~Accessibility pass - Focus on buttons and interactive elements first~~ DONE
   4. ~~Performance hooks - Add useCallback to prevent child re-renders~~ DONE
   5. ~~Code Splitting - Add React.lazy() for heavy components~~ DONE
-  6. Custom Hooks - Extract useGeolocation, usePersistentState, useLeaflet
+  6. ~~Custom Hooks - Extract useGeolocation, usePersistentState, useLeaflet, useCampFiltering~~ DONE
+  7. TypeScript - Install @types/leaflet and add proper types
