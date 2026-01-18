@@ -102,7 +102,7 @@ export default function HomePage() {
   const [view, setView] = useState<"list" | "map" | "calendar" | "planner">(
     "list"
   );
-  const [plannedCamps, setPlannedCamps] = useState<Map<string, Camp>>(
+  const [plannedCamps, setPlannedCamps] = useState<Map<string, Camp[]>>(
     new Map()
   );
   const [isSharedPlan, setIsSharedPlan] = useState(false);
@@ -166,20 +166,37 @@ export default function HomePage() {
   useEffect(() => {
     if (loading) return;
     if (isSharedPlan) return;
-    const obj: Record<string, Camp> = {};
-    plannedCamps.forEach((camp, week) => {
-      obj[week] = camp;
+    const obj: Record<string, Camp[]> = {};
+    plannedCamps.forEach((camps, week) => {
+      obj[week] = camps;
     });
-    localStorage.setItem("camp-planner", JSON.stringify(obj));
+    localStorage.setItem("camp-planner-v2", JSON.stringify(obj));
   }, [plannedCamps, isSharedPlan, loading]);
 
-  const setPlannerCamp = useCallback((week: string, camp: Camp | null) => {
+  // Add or remove a camp from a week's plan
+  // camp = null means clear the week, camp with existing catalogId means remove it
+  const setPlannerCamp = useCallback((week: string, camp: Camp | null, action?: "add" | "remove") => {
     setPlannedCamps((prev) => {
       const next = new Map(prev);
+      const currentCamps = next.get(week) || [];
+
       if (camp === null) {
+        // Clear all camps for this week
         next.delete(week);
+      } else if (action === "remove") {
+        // Remove specific camp
+        const filtered = currentCamps.filter(c => c.catalogId !== camp.catalogId);
+        if (filtered.length === 0) {
+          next.delete(week);
+        } else {
+          next.set(week, filtered);
+        }
       } else {
-        next.set(week, camp);
+        // Add camp (default action)
+        const exists = currentCamps.some(c => c.catalogId === camp.catalogId);
+        if (!exists) {
+          next.set(week, [...currentCamps, camp]);
+        }
       }
       return next;
     });
@@ -237,14 +254,18 @@ export default function HomePage() {
 
         if (planParam) {
           try {
+            // URL format: week1:id1,week1:id2,week2:id3 (multiple camps per week supported)
             const planPairs = planParam.split(",");
-            const sharedPlan = new Map<string, Camp>();
+            const sharedPlan = new Map<string, Camp[]>();
             planPairs.forEach((pair) => {
               const [weekEncoded, catalogId] = pair.split(":");
               const week = decodeURIComponent(weekEncoded);
               const camp = d.camps.find((c: Camp) => c.catalogId === catalogId);
               if (camp) {
-                sharedPlan.set(week, camp);
+                const existing = sharedPlan.get(week) || [];
+                if (!existing.some(c => c.catalogId === catalogId)) {
+                  sharedPlan.set(week, [...existing, camp]);
+                }
               }
             });
             if (sharedPlan.size > 0) {
@@ -255,18 +276,38 @@ export default function HomePage() {
           } catch {}
         } else {
           try {
-            const saved = localStorage.getItem("camp-planner");
-            if (saved) {
-              const parsed = JSON.parse(saved);
-              const localPlan = new Map<string, Camp>();
+            // Try new format first (v2 - arrays), then fall back to old format (single camp)
+            const savedV2 = localStorage.getItem("camp-planner-v2");
+            const savedV1 = localStorage.getItem("camp-planner");
+            const localPlan = new Map<string, Camp[]>();
+
+            if (savedV2) {
+              // New format: { week: Camp[] }
+              const parsed = JSON.parse(savedV2);
+              Object.entries(parsed).forEach(([week, campsData]) => {
+                const camps = (campsData as Camp[])
+                  .map(campData => d.camps.find((c: Camp) => c.catalogId === campData.catalogId))
+                  .filter((c): c is Camp => c !== undefined);
+                if (camps.length > 0) {
+                  localPlan.set(week, camps);
+                }
+              });
+            } else if (savedV1) {
+              // Old format: { week: Camp } - migrate to new format
+              const parsed = JSON.parse(savedV1);
               Object.entries(parsed).forEach(([week, campData]) => {
                 const camp = d.camps.find(
                   (c: Camp) => c.catalogId === (campData as Camp).catalogId
                 );
                 if (camp) {
-                  localPlan.set(week, camp);
+                  localPlan.set(week, [camp]);
                 }
               });
+              // Clean up old format after migration
+              localStorage.removeItem("camp-planner");
+            }
+
+            if (localPlan.size > 0) {
               setPlannedCamps(localPlan);
             }
           } catch {}
@@ -1263,30 +1304,21 @@ function CampModal({
 }: {
   camp: Camp;
   onClose: () => void;
-  plannedCamps: Map<string, Camp>;
-  onPlanCamp: (week: string, camp: Camp | null) => void;
+  plannedCamps: Map<string, Camp[]>;
+  onPlanCamp: (week: string, camp: Camp | null, action?: "add" | "remove") => void;
 }) {
   const style = getCategoryStyle(camp.category);
   const modalRef = React.useRef<HTMLDivElement>(null);
-  const [showConflict, setShowConflict] = React.useState(false);
-  const [existingCamp, setExistingCamp] = React.useState<Camp | null>(null);
 
-  const isInPlanner = plannedCamps.has(camp.dateRange) && plannedCamps.get(camp.dateRange)?.catalogId === camp.catalogId;
+  const weekCamps = plannedCamps.get(camp.dateRange) || [];
+  const isInPlanner = weekCamps.some(c => c.catalogId === camp.catalogId);
 
   const handleAddToPlanner = () => {
-    const existing = plannedCamps.get(camp.dateRange);
-    if (existing && existing.catalogId !== camp.catalogId) {
-      setExistingCamp(existing);
-      setShowConflict(true);
-    } else {
-      onPlanCamp(camp.dateRange, camp);
-    }
+    onPlanCamp(camp.dateRange, camp, "add");
   };
 
-  const handleSwap = () => {
-    onPlanCamp(camp.dateRange, camp);
-    setShowConflict(false);
-    setExistingCamp(null);
+  const handleRemoveFromPlanner = () => {
+    onPlanCamp(camp.dateRange, camp, "remove");
   };
 
   // Focus trap and escape key handling
@@ -1472,47 +1504,30 @@ function CampModal({
           </div>
 
           {/* Add to Planner section */}
-          {!showConflict ? (
-            <div className="pt-4 border-t border-camp-sand">
-              {isInPlanner ? (
-                <div className="flex items-center justify-center gap-2 py-3 bg-camp-forest/10 rounded-xl text-camp-forest font-medium">
+          <div className="pt-4 border-t border-camp-sand">
+            {isInPlanner ? (
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center justify-center gap-2 py-3 bg-camp-forest/10 rounded-xl text-camp-forest font-medium">
                   <Check className="w-5 h-5" />
-                  <span>Added to Planner</span>
+                  <span>In Planner</span>
                 </div>
-              ) : (
                 <button
-                  onClick={handleAddToPlanner}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-camp-forest hover:bg-camp-pine text-white font-medium rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-camp-forest focus:ring-offset-2"
+                  onClick={handleRemoveFromPlanner}
+                  className="px-4 py-3 border border-rose-200 text-rose-600 hover:bg-rose-50 font-medium rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2"
                 >
-                  <CalendarPlus className="w-5 h-5" />
-                  <span>Add to Planner</span>
+                  Remove
                 </button>
-              )}
-            </div>
-          ) : (
-            <div className="pt-4 border-t border-camp-sand space-y-4">
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <p className="text-sm font-semibold text-amber-800 mb-2">Week Already Planned</p>
-                <p className="text-xs text-amber-700 mb-3">
-                  You already have <span className="font-semibold">{existingCamp?.title}</span> planned for {camp.dateRange}
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowConflict(false)}
-                    className="flex-1 py-2 border border-amber-300 text-amber-800 text-sm font-medium rounded-lg hover:bg-amber-100 transition-colors"
-                  >
-                    Keep Current
-                  </button>
-                  <button
-                    onClick={handleSwap}
-                    className="flex-1 py-2 bg-camp-forest hover:bg-camp-pine text-white text-sm font-medium rounded-lg transition-colors"
-                  >
-                    Replace with This
-                  </button>
-                </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <button
+                onClick={handleAddToPlanner}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-camp-forest hover:bg-camp-pine text-white font-medium rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-camp-forest focus:ring-offset-2"
+              >
+                <CalendarPlus className="w-5 h-5" />
+                <span>Add to Planner</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

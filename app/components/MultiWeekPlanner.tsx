@@ -127,12 +127,13 @@ const pdfStyles = StyleSheet.create({
 
 interface PlannerPDFProps {
   weeks: { dateRange: string; startDate: ParsedDate; endDate: ParsedDate }[];
-  plannedCamps: Map<string, Camp>;
+  plannedCamps: Map<string, Camp[]>;
   totalCost: number;
+  totalCamps: number;
 }
 
-function PlannerPDF({ weeks, plannedCamps, totalCost }: PlannerPDFProps) {
-  const weeksPlanned = plannedCamps.size;
+function PlannerPDF({ weeks, plannedCamps, totalCost, totalCamps }: PlannerPDFProps) {
+  const weeksPlanned = Array.from(plannedCamps.values()).filter(camps => camps.length > 0).length;
   const weeksWithGaps = weeks.length - weeksPlanned;
 
   return (
@@ -147,8 +148,8 @@ function PlannerPDF({ weeks, plannedCamps, totalCost }: PlannerPDFProps) {
         {/* Summary */}
         <View style={pdfStyles.summaryRow}>
           <View style={pdfStyles.summaryItem}>
-            <Text style={pdfStyles.summaryValue}>{weeksPlanned}</Text>
-            <Text style={pdfStyles.summaryLabel}>Weeks Planned</Text>
+            <Text style={pdfStyles.summaryValue}>{totalCamps}</Text>
+            <Text style={pdfStyles.summaryLabel}>Camps Planned</Text>
           </View>
           <View style={pdfStyles.summaryItem}>
             <Text style={pdfStyles.summaryValueCost}>${totalCost}</Text>
@@ -162,7 +163,8 @@ function PlannerPDF({ weeks, plannedCamps, totalCost }: PlannerPDFProps) {
 
         {/* Week List */}
         {weeks.map((week) => {
-          const camp = plannedCamps.get(week.dateRange);
+          const camps = plannedCamps.get(week.dateRange) || [];
+          const weekCost = camps.reduce((sum, c) => sum + c.fee, 0);
           return (
             <View key={week.dateRange} style={pdfStyles.weekRow}>
               <Text style={pdfStyles.weekDate}>
@@ -170,21 +172,23 @@ function PlannerPDF({ weeks, plannedCamps, totalCost }: PlannerPDFProps) {
                 {week.endDate.day}
               </Text>
               <View style={pdfStyles.weekCamp}>
-                {camp ? (
-                  <>
-                    <Text style={pdfStyles.weekCampTitle}>{camp.title}</Text>
-                    <Text style={pdfStyles.weekCampDetails}>
-                      {camp.location} · {camp.startTime.formatted} -{" "}
-                      {camp.endTime.formatted} · Ages {camp.minAge}-
-                      {camp.maxAge}
-                    </Text>
-                  </>
+                {camps.length > 0 ? (
+                  camps.map((camp, idx) => (
+                    <View key={camp.catalogId} style={idx > 0 ? { marginTop: 4 } : {}}>
+                      <Text style={pdfStyles.weekCampTitle}>{camp.title}</Text>
+                      <Text style={pdfStyles.weekCampDetails}>
+                        {camp.location} · {camp.startTime.formatted} -{" "}
+                        {camp.endTime.formatted} · Ages {camp.minAge}-
+                        {camp.maxAge} · ${camp.fee}
+                      </Text>
+                    </View>
+                  ))
                 ) : (
                   <Text style={pdfStyles.emptyWeek}>No camp selected</Text>
                 )}
               </View>
               <Text style={pdfStyles.weekPrice}>
-                {camp ? `$${camp.fee}` : "—"}
+                {camps.length > 0 ? `$${weekCost}` : "—"}
               </Text>
             </View>
           );
@@ -208,8 +212,8 @@ function PlannerPDF({ weeks, plannedCamps, totalCost }: PlannerPDFProps) {
 export interface MultiWeekPlannerProps {
   camps: Camp[];
   allCamps: Camp[];
-  plannedCamps: Map<string, Camp>;
-  onPlanCamp: (week: string, camp: Camp | null) => void;
+  plannedCamps: Map<string, Camp[]>;
+  onPlanCamp: (week: string, camp: Camp | null, action?: "add" | "remove") => void;
   onSelect: (camp: Camp) => void;
   isSharedPlan: boolean;
   onSaveSharedPlan: () => void;
@@ -230,8 +234,10 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
 
   const generateShareLink = () => {
     const planPairs: string[] = [];
-    plannedCamps.forEach((camp, week) => {
-      planPairs.push(`${encodeURIComponent(week)}:${camp.catalogId}`);
+    plannedCamps.forEach((camps, week) => {
+      camps.forEach(camp => {
+        planPairs.push(`${encodeURIComponent(week)}:${camp.catalogId}`);
+      });
     });
     const baseUrl = window.location.origin + window.location.pathname;
     return `${baseUrl}?view=planner&plan=${planPairs.join(",")}`;
@@ -287,18 +293,22 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
     return grouped;
   }, [camps]);
 
-  const totalCost = useMemo(() => {
-    let total = 0;
-    plannedCamps.forEach((camp) => {
-      total += camp.fee;
+  const { totalCost, totalCampsPlanned } = useMemo(() => {
+    let cost = 0;
+    let count = 0;
+    plannedCamps.forEach((camps) => {
+      camps.forEach((camp) => {
+        cost += camp.fee;
+        count += 1;
+      });
     });
-    return total;
+    return { totalCost: cost, totalCampsPlanned: count };
   }, [plannedCamps]);
 
-  const weeksPlanned = plannedCamps.size;
-  const weeksCovered = allWeeks.filter((w) =>
-    plannedCamps.has(w.dateRange)
-  ).length;
+  const weeksCovered = allWeeks.filter((w) => {
+    const camps = plannedCamps.get(w.dateRange);
+    return camps && camps.length > 0;
+  }).length;
   const weeksWithGaps = allWeeks.length - weeksCovered;
 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -311,6 +321,7 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
           weeks={allWeeks}
           plannedCamps={plannedCamps}
           totalCost={totalCost}
+          totalCamps={totalCampsPlanned}
         />
       ).toBlob();
       const url = URL.createObjectURL(blob);
@@ -373,9 +384,9 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
           <div className="grid grid-cols-3 gap-4 text-center mb-4">
             <div>
               <div className="text-2xl sm:text-3xl font-display font-bold text-camp-forest">
-                {weeksPlanned}
+                {totalCampsPlanned}
               </div>
-              <div className="text-xs text-camp-bark/60">Weeks Planned</div>
+              <div className="text-xs text-camp-bark/60">Camps Planned</div>
             </div>
             <div>
               <div className="text-2xl sm:text-3xl font-display font-bold text-camp-terracotta">
@@ -395,7 +406,7 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
             </div>
           </div>
 
-          {weeksPlanned > 0 && (
+          {totalCampsPlanned > 0 && (
             <div className="flex gap-2 print:hidden">
               <button
                 onClick={copyShareLink}
@@ -441,10 +452,12 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
 
         <div className="space-y-3">
           {allWeeks.map((week, i) => {
-            const plannedCamp = plannedCamps.get(week.dateRange);
+            const plannedWeekCamps = plannedCamps.get(week.dateRange) || [];
             const availableCamps = campsByWeek.get(week.dateRange) || [];
             const isExpanded = expandedWeek === week.dateRange;
             const hasAvailableCamps = availableCamps.length > 0;
+            const hasCampsPlanned = plannedWeekCamps.length > 0;
+            const weekCost = plannedWeekCamps.reduce((sum, c) => sum + c.fee, 0);
 
             return (
               <div
@@ -457,13 +470,13 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
               >
                 <div
                   className={`px-4 py-3 flex items-center justify-between gap-3 ${
-                    plannedCamp ? "bg-camp-forest/5" : ""
+                    hasCampsPlanned ? "bg-camp-forest/5" : ""
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        plannedCamp
+                        hasCampsPlanned
                           ? "bg-camp-forest text-white"
                           : "bg-camp-sand text-camp-bark/50"
                       }`}
@@ -477,9 +490,9 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
                         {week.startDate.monthName} {week.startDate.day} -{" "}
                         {week.endDate.monthName} {week.endDate.day}
                       </h3>
-                      {plannedCamp ? (
+                      {hasCampsPlanned ? (
                         <p className="text-xs text-camp-forest font-medium truncate">
-                          {plannedCamp.title}
+                          {plannedWeekCamps.length} camp{plannedWeekCamps.length > 1 ? "s" : ""} planned
                         </p>
                       ) : (
                         <p className="text-xs text-camp-bark/50">
@@ -492,20 +505,12 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {plannedCamp && (
+                    {hasCampsPlanned && (
                       <span className="px-2 py-1 bg-camp-terracotta text-white text-xs font-bold rounded print:bg-gray-100 print:text-gray-800">
-                        ${plannedCamp.fee}
+                        ${weekCost}
                       </span>
                     )}
-                    {plannedCamp ? (
-                      <button
-                        onClick={() => onPlanCamp(week.dateRange, null)}
-                        aria-label={`Remove ${plannedCamp.title} from plan`}
-                        className="p-2 text-camp-bark/40 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-rose-400 print:hidden"
-                      >
-                        <X className="w-4 h-4" aria-hidden="true" />
-                      </button>
-                    ) : hasAvailableCamps ? (
+                    {hasAvailableCamps ? (
                       <button
                         onClick={() => {
                           setExpandedWeek(isExpanded ? null : week.dateRange);
@@ -515,7 +520,7 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
                         aria-controls={`week-camps-${i}`}
                         className="px-3 py-1.5 bg-camp-forest text-white text-xs font-semibold rounded-lg hover:bg-camp-pine transition-colors focus:outline-none focus:ring-2 focus:ring-camp-forest focus:ring-offset-2 print:hidden"
                       >
-                        {isExpanded ? "Close" : "Select"}
+                        {isExpanded ? "Close" : hasCampsPlanned ? "Add More" : "Select"}
                       </button>
                     ) : (
                       <span className="px-3 py-1.5 bg-camp-sand text-camp-bark/40 text-xs font-medium rounded-lg print:hidden">
@@ -525,24 +530,80 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
                   </div>
                 </div>
 
+                {/* Show planned camps for this week */}
+                {hasCampsPlanned && !isExpanded && (
+                  <div className="px-4 pb-3 space-y-2">
+                    {plannedWeekCamps.map((camp) => (
+                      <div
+                        key={camp.catalogId}
+                        className="flex items-center justify-between gap-2 bg-camp-warm/50 rounded-lg px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <button
+                            type="button"
+                            onClick={() => onSelect(camp)}
+                            className="font-medium text-camp-pine text-sm truncate hover:text-camp-terracotta transition-colors text-left focus:outline-none focus:underline"
+                          >
+                            {camp.title}
+                          </button>
+                          <p className="text-xs text-camp-bark/60">
+                            {camp.location} · {camp.startTime.formatted} - {camp.endTime.formatted}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-xs font-bold text-camp-terracotta">${camp.fee}</span>
+                          <button
+                            onClick={() => onPlanCamp(week.dateRange, camp, "remove")}
+                            aria-label={`Remove ${camp.title} from plan`}
+                            className="p-1.5 text-camp-bark/40 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-rose-400 print:hidden"
+                          >
+                            <X className="w-4 h-4" aria-hidden="true" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {isExpanded &&
                   hasAvailableCamps &&
                   (() => {
                     const searchLower = plannerSearch.toLowerCase();
-                    const filteredCamps = plannerSearch
-                      ? availableCamps.filter(
-                          (c) =>
-                            c.title.toLowerCase().includes(searchLower) ||
-                            c.category.toLowerCase().includes(searchLower) ||
-                            c.location.toLowerCase().includes(searchLower)
-                        )
-                      : availableCamps;
+                    const plannedIds = new Set(plannedWeekCamps.map(c => c.catalogId));
+                    const filteredCamps = availableCamps.filter((c) => {
+                      const matchesSearch = !plannerSearch ||
+                        c.title.toLowerCase().includes(searchLower) ||
+                        c.category.toLowerCase().includes(searchLower) ||
+                        c.location.toLowerCase().includes(searchLower);
+                      return matchesSearch;
+                    });
 
                     return (
                       <div
                         id={`week-camps-${i}`}
                         className="border-t border-camp-sand p-3 bg-camp-warm/50 print:hidden"
                       >
+                        {/* Show already planned camps in expanded view */}
+                        {plannedWeekCamps.length > 0 && (
+                          <div className="mb-3 pb-3 border-b border-camp-sand">
+                            <p className="text-xs font-semibold text-camp-bark/60 mb-2">Planned for this week:</p>
+                            <div className="space-y-1">
+                              {plannedWeekCamps.map((camp) => (
+                                <div key={camp.catalogId} className="flex items-center justify-between gap-2 bg-camp-forest/10 rounded-lg px-3 py-2">
+                                  <span className="text-sm font-medium text-camp-pine truncate">{camp.title}</span>
+                                  <button
+                                    onClick={() => onPlanCamp(week.dateRange, camp, "remove")}
+                                    aria-label={`Remove ${camp.title}`}
+                                    className="p-1 text-camp-bark/40 hover:text-rose-500 rounded transition-colors"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         <div className="relative mb-3">
                           <label htmlFor={`search-camps-${i}`} className="sr-only">
                             Search camps for week of {week.startDate.monthName} {week.startDate.day}
@@ -568,10 +629,15 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
                             {filteredCamps.map((camp, j) => {
                               const style = getCategoryStyle(camp.category);
+                              const isAlreadyPlanned = plannedIds.has(camp.catalogId);
                               return (
                                 <article
                                   key={`${camp.catalogId}-${j}`}
-                                  className="bg-white rounded-xl p-3 border border-camp-sand hover:border-camp-terracotta/30 transition-all"
+                                  className={`bg-white rounded-xl p-3 border transition-all ${
+                                    isAlreadyPlanned
+                                      ? "border-camp-forest/30 bg-camp-forest/5"
+                                      : "border-camp-sand hover:border-camp-terracotta/30"
+                                  }`}
                                 >
                                   <div className="flex items-start justify-between gap-2 mb-2">
                                     <button
@@ -603,17 +669,21 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
                                         {camp.minAge}-{camp.maxAge}
                                       </span>
                                     </div>
-                                    <button
-                                      onClick={() => {
-                                        onPlanCamp(week.dateRange, camp);
-                                        setExpandedWeek(null);
-                                        setPlannerSearch("");
-                                      }}
-                                      aria-label={`Add ${camp.title} to plan`}
-                                      className="px-2 py-1 bg-camp-forest text-white text-xs font-semibold rounded hover:bg-camp-pine transition-colors focus:outline-none focus:ring-2 focus:ring-camp-forest focus:ring-offset-1"
-                                    >
-                                      Add
-                                    </button>
+                                    {isAlreadyPlanned ? (
+                                      <span className="px-2 py-1 bg-camp-forest/20 text-camp-forest text-xs font-semibold rounded flex items-center gap-1">
+                                        <Check className="w-3 h-3" /> Added
+                                      </span>
+                                    ) : (
+                                      <button
+                                        onClick={() => {
+                                          onPlanCamp(week.dateRange, camp, "add");
+                                        }}
+                                        aria-label={`Add ${camp.title} to plan`}
+                                        className="px-2 py-1 bg-camp-forest text-white text-xs font-semibold rounded hover:bg-camp-pine transition-colors focus:outline-none focus:ring-2 focus:ring-camp-forest focus:ring-offset-1"
+                                      >
+                                        Add
+                                      </button>
+                                    )}
                                   </div>
                                 </article>
                               );
@@ -632,23 +702,31 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
           <h3 className="font-display font-bold text-lg mb-2">
             Planned Camps Summary
           </h3>
-          <ul className="space-y-1 text-sm">
+          <ul className="space-y-2 text-sm">
             {allWeeks.map((week) => {
-              const camp = plannedCamps.get(week.dateRange);
+              const camps = plannedCamps.get(week.dateRange) || [];
               return (
-                <li key={week.dateRange} className="flex justify-between">
-                  <span>
-                    {week.startDate.monthName} {week.startDate.day}:
-                  </span>
-                  <span className="font-medium">
-                    {camp ? `${camp.title} - $${camp.fee}` : "—"}
-                  </span>
+                <li key={week.dateRange}>
+                  <div className="flex justify-between font-medium">
+                    <span>{week.startDate.monthName} {week.startDate.day}:</span>
+                    {camps.length === 0 && <span className="text-gray-400">—</span>}
+                  </div>
+                  {camps.length > 0 && (
+                    <ul className="ml-4 mt-1 space-y-0.5">
+                      {camps.map((camp) => (
+                        <li key={camp.catalogId} className="flex justify-between">
+                          <span>{camp.title}</span>
+                          <span>${camp.fee}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               );
             })}
           </ul>
           <div className="mt-4 pt-2 border-t border-gray-200 font-bold flex justify-between">
-            <span>Total:</span>
+            <span>Total ({totalCampsPlanned} camps):</span>
             <span>${totalCost}</span>
           </div>
         </div>
