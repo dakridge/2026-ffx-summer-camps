@@ -26,8 +26,8 @@ Checklist for improving this codebase against React best practices.
 - [ ] Add skip-to-content link
 
 ### Error Handling
-- [ ] Create `components/ErrorBoundary.tsx`
-- [ ] Wrap main app content in ErrorBoundary
+- [x] Create `components/ErrorBoundary.tsx`
+- [x] Wrap main app content in ErrorBoundary
 - [ ] Add ErrorBoundary around map components (external library risk)
 - [ ] Replace empty `catch {}` blocks with proper error logging
 - [ ] Add user-facing error states for failed data fetches
@@ -103,7 +103,7 @@ Checklist for improving this codebase against React best practices.
 |----------|-------|------|-----------|
 | Component Structure | 8 | 6 | 2 |
 | Accessibility | 7 | 0 | 7 |
-| Error Handling | 6 | 0 | 6 |
+| Error Handling | 6 | 2 | 4 |
 | Performance | 10 | 0 | 10 |
 | State Management | 2 | 0 | 2 |
 | Code Splitting | 4 | 0 | 4 |
@@ -111,12 +111,12 @@ Checklist for improving this codebase against React best practices.
 | TypeScript | 4 | 0 | 4 |
 | Map Optimization | 2 | 0 | 2 |
 | Code Quality | 4 | 0 | 4 |
-| **Total** | **51** | **6** | **45** |
+| **Total** | **51** | **8** | **43** |
 
 
 ## Recommended Next Steps
 
   1. ~~Create components/ folder - Move CampList, CampMap, CampCalendar, MultiWeekPlanner~~ DONE
-  2. Add ErrorBoundary - Wrap root content
+  2. ~~Add ErrorBoundary - Wrap root content~~ DONE
   3. Accessibility pass - Focus on buttons and interactive elements first
   4. Performance hooks - Add useCallback to prevent child re-renders
