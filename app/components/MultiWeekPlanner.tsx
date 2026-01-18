@@ -496,8 +496,8 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
                           : "bg-camp-sand text-camp-bark/50"
                       }`}
                     >
-                      <span className="font-display font-bold text-sm">
-                        {week.startDate.day}
+                      <span className="font-display font-bold text-xs">
+                        {week.startDate.monthName.slice(0, 3)}
                       </span>
                     </div>
                     <div className="min-w-0">
