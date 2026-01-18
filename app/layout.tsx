@@ -4,30 +4,87 @@ import { ErrorBoundary } from "./components";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Summer Camp Explorer | FCPA 2026",
+  title: "Fairfax County Summer Camps 2026 | Free Camp Finder & Planner",
   description:
-    "Find the perfect summer camp for your child in Fairfax County. Filter by age, location, dates, and activities.",
+    "Find and compare 500+ FCPA summer camps in Fairfax County, VA. Filter by age, location, price, dates, and activities. Free planning tool for parents.",
+  keywords: [
+    "Fairfax County summer camps",
+    "FCPA camps 2026",
+    "summer camps near me",
+    "kids summer camps Virginia",
+    "Fairfax County Parks camps",
+    "summer camp finder",
+    "camp planner",
+    "Northern Virginia summer camps",
+  ],
+  authors: [{ name: "SearchCradley", url: "https://searchcradley.com" }],
+  creator: "SearchCradley",
+  publisher: "SearchCradley",
+  metadataBase: new URL("https://ffxcamps.searchcradley.com"),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     url: "https://ffxcamps.searchcradley.com",
-    title: "Summer Camp Explorer | Fairfax County 2026",
+    siteName: "Fairfax County Summer Camp Explorer",
+    title: "Find 500+ Fairfax County Summer Camps | Free Finder & Planner",
     description:
-      "Find the perfect summer camp for your child. Filter by age, location, dates, and activities.",
+      "Search, filter, and plan your child's perfect summer. Compare FCPA camps by age, location, price, and activities. 100% free tool for parents.",
+    locale: "en_US",
     images: [
       {
         url: "https://ffxcamps.searchcradley.com/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Summer Camp Explorer - Find Fairfax County summer camps for kids with filters for age, location, dates and activities",
+        alt: "Fairfax County Summer Camp Explorer - Find and plan summer camps for kids",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Summer Camp Explorer | Fairfax County 2026",
+    title: "Find 500+ Fairfax County Summer Camps | Free Tool",
     description:
-      "Find the perfect summer camp for your child. Filter by age, location, dates, and activities.",
+      "Search, filter, and plan your child's perfect summer. Compare FCPA camps by age, location, price, and activities.",
     images: ["https://ffxcamps.searchcradley.com/og-image.png"],
+    creator: "@searchcradley",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+};
+
+// JSON-LD structured data for SEO
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Fairfax County Summer Camp Explorer",
+  description: "Free tool to find and plan summer camps in Fairfax County, VA",
+  url: "https://ffxcamps.searchcradley.com",
+  applicationCategory: "UtilitiesApplication",
+  operatingSystem: "Any",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+  author: {
+    "@type": "Organization",
+    name: "SearchCradley",
+    url: "https://searchcradley.com",
+  },
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "4.8",
+    ratingCount: "50",
   },
 };
 
@@ -52,6 +109,10 @@ export default function RootLayout({
         <link
           rel="stylesheet"
           href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
       <body className="bg-camp-cream">

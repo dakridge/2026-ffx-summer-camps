@@ -112,6 +112,23 @@ export default function HomePage() {
   const [sortBy, setSortBy] = useState<
     "default" | "distance" | "price" | "priceDesc" | "date" | "name"
   >("default");
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  // Check if user has seen the welcome popup (only if enabled via env var)
+  useEffect(() => {
+    const welcomeEnabled = process.env.NEXT_PUBLIC_SHOW_WELCOME === "true";
+    if (!welcomeEnabled) return;
+
+    const hasSeenWelcome = localStorage.getItem("camp-welcome-seen");
+    if (!hasSeenWelcome) {
+      setShowWelcome(true);
+    }
+  }, []);
+
+  const dismissWelcome = useCallback(() => {
+    localStorage.setItem("camp-welcome-seen", "true");
+    setShowWelcome(false);
+  }, []);
 
   // Custom hooks for persistent state and geolocation
   const [favorites, setFavorites] = usePersistentSet("camp-favorites");
@@ -860,6 +877,21 @@ export default function HomePage() {
             </button>
           )}
         </div>
+
+        {/* Footer with branding */}
+        <div className="p-4 border-t border-camp-sand mt-auto">
+          <p className="text-[10px] text-camp-bark/40 text-center">
+            A free tool by{" "}
+            <a
+              href="https://searchcradley.com?ref=ffxcamps"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-camp-terracotta hover:underline font-medium"
+            >
+              SearchCradley
+            </a>
+          </p>
+        </div>
       </aside>
 
       {/* Main Content */}
@@ -1025,10 +1057,107 @@ export default function HomePage() {
           onPlanCamp={setPlannerCamp}
         />
       )}
+
+      {/* Welcome Popup */}
+      {showWelcome && !loading && (
+        <WelcomePopup onDismiss={dismissWelcome} />
+      )}
     </div>
   );
 }
 
+
+function WelcomePopup({ onDismiss }: { onDismiss: () => void }) {
+  const modalRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onDismiss();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [onDismiss]);
+
+  return (
+    <div
+      className="fixed inset-0 bg-camp-pine/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
+      onClick={onDismiss}
+      role="presentation"
+    >
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="welcome-title"
+        className="bg-white rounded-3xl max-w-md w-full shadow-camp-lg animate-scale-in overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header with sunset gradient inspired by og-image */}
+        <div className="bg-gradient-to-br from-[#1B3A4B] via-[#D4793A] to-[#E8A55F] p-6 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-white/20 rounded-2xl flex items-center justify-center">
+            <Tent className="w-8 h-8 text-white" aria-hidden="true" />
+          </div>
+          <h2 id="welcome-title" className="font-display text-2xl font-bold text-white mb-2">
+            Welcome to Camp Explorer!
+          </h2>
+          <p className="text-white/90 text-sm">
+            Your free guide to Fairfax County summer camps
+          </p>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-4">
+          <p className="text-camp-bark text-sm leading-relaxed">
+            Hey there! We built this tool to help parents like you find the perfect summer camps
+            for your kids. Browse 500+ FCPA camps, filter by age, location, and dates —
+            and plan your whole summer in one place.
+          </p>
+
+          <div className="bg-camp-warm rounded-xl p-4">
+            <p className="text-camp-bark/80 text-sm">
+              <span className="font-semibold text-camp-pine">100% free.</span>{" "}
+              Made with ❤️ by the team at{" "}
+              <a
+                href="https://searchcradley.com?ref=ffxcamps-welcome"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-camp-terracotta font-semibold hover:underline"
+              >
+                SearchCradley
+              </a>
+              , where we help people find what matters most.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 pt-2">
+            <button
+              onClick={onDismiss}
+              className="w-full py-3 bg-camp-forest hover:bg-camp-pine text-white font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-camp-forest focus:ring-offset-2"
+            >
+              Start Exploring
+            </button>
+            <a
+              href="https://searchcradley.com?ref=ffxcamps-welcome"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-2.5 text-center text-camp-bark/60 hover:text-camp-terracotta text-sm font-medium transition-colors"
+            >
+              Learn more about SearchCradley →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ModalMap({
   coordinates,
