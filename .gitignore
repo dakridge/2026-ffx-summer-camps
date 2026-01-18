@@ -48,3 +48,4 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # PDF extraction output
 data/sumer-camps-pages
+data/*.pdf
