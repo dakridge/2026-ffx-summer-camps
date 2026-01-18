@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useDeferredValue } from "react";
 import {
   Search,
   MapPin,
@@ -113,6 +113,10 @@ export default function HomePage() {
     "default" | "distance" | "price" | "priceDesc" | "date" | "name"
   >("default");
 
+  // Defer filter values so typing remains responsive while filtering is computed in background
+  const deferredFilters = useDeferredValue(filters);
+  const deferredSortBy = useDeferredValue(sortBy);
+
   // Initialize state from URL params and localStorage on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -216,18 +220,23 @@ export default function HomePage() {
     setSortBy((current) => current === "distance" ? "default" : current);
   }, []);
 
+  // Debounce URL updates to avoid lag when typing
   useEffect(() => {
     if (loading) return;
     if (isSharedPlan) return;
 
-    const params = filtersToParams(filters);
-    if (view === "map") params.set("view", "map");
-    if (view === "calendar") params.set("view", "calendar");
-    if (view === "planner") params.set("view", "planner");
-    const newUrl = params.toString()
-      ? `?${params.toString()}`
-      : window.location.pathname;
-    window.history.replaceState({}, "", newUrl);
+    const timeoutId = setTimeout(() => {
+      const params = filtersToParams(filters);
+      if (view === "map") params.set("view", "map");
+      if (view === "calendar") params.set("view", "calendar");
+      if (view === "planner") params.set("view", "planner");
+      const newUrl = params.toString()
+        ? `?${params.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
   }, [filters, view, isSharedPlan, loading]);
 
   useEffect(() => {
@@ -284,8 +293,8 @@ export default function HomePage() {
 
     let camps = data.camps.filter((camp) => {
       if (showFavoritesOnly && !favorites.has(camp.catalogId)) return false;
-      if (filters.search) {
-        const search = filters.search.toLowerCase();
+      if (deferredFilters.search) {
+        const search = deferredFilters.search.toLowerCase();
         const matchesSearch =
           camp.title.toLowerCase().includes(search) ||
           camp.location.toLowerCase().includes(search) ||
@@ -293,30 +302,30 @@ export default function HomePage() {
         if (!matchesSearch) return false;
       }
       if (
-        filters.categories.length > 0 &&
-        !filters.categories.includes(camp.category)
+        deferredFilters.categories.length > 0 &&
+        !deferredFilters.categories.includes(camp.category)
       )
         return false;
       if (
-        filters.communities.length > 0 &&
-        !filters.communities.includes(camp.community)
+        deferredFilters.communities.length > 0 &&
+        !deferredFilters.communities.includes(camp.community)
       )
         return false;
       if (
-        filters.locations.length > 0 &&
-        !filters.locations.includes(camp.location)
+        deferredFilters.locations.length > 0 &&
+        !deferredFilters.locations.includes(camp.location)
       )
         return false;
       if (
-        filters.dateRanges.length > 0 &&
-        !filters.dateRanges.includes(camp.dateRange)
+        deferredFilters.dateRanges.length > 0 &&
+        !deferredFilters.dateRanges.includes(camp.dateRange)
       )
         return false;
-      if (filters.childAge !== null && (camp.minAge > filters.childAge || camp.maxAge < filters.childAge)) return false;
-      if (filters.maxFee !== null && camp.fee > filters.maxFee) return false;
-      if (filters.startHour !== null && camp.startTime.hour > filters.startHour)
+      if (deferredFilters.childAge !== null && (camp.minAge > deferredFilters.childAge || camp.maxAge < deferredFilters.childAge)) return false;
+      if (deferredFilters.maxFee !== null && camp.fee > deferredFilters.maxFee) return false;
+      if (deferredFilters.startHour !== null && camp.startTime.hour > deferredFilters.startHour)
         return false;
-      if (filters.endHour !== null && camp.endTime.hour < filters.endHour)
+      if (deferredFilters.endHour !== null && camp.endTime.hour < deferredFilters.endHour)
         return false;
       return true;
     });
@@ -334,28 +343,28 @@ export default function HomePage() {
       return { ...camp, distance };
     });
 
-    if (sortBy === "distance" && userLocation) {
+    if (deferredSortBy === "distance" && userLocation) {
       campsWithDistance.sort((a, b) => {
         if (a.distance === null) return 1;
         if (b.distance === null) return -1;
         return a.distance - b.distance;
       });
-    } else if (sortBy === "price") {
+    } else if (deferredSortBy === "price") {
       campsWithDistance.sort((a, b) => a.fee - b.fee);
-    } else if (sortBy === "priceDesc") {
+    } else if (deferredSortBy === "priceDesc") {
       campsWithDistance.sort((a, b) => b.fee - a.fee);
-    } else if (sortBy === "date") {
+    } else if (deferredSortBy === "date") {
       campsWithDistance.sort(
         (a, b) =>
           new Date(a.startDate.iso).getTime() -
           new Date(b.startDate.iso).getTime()
       );
-    } else if (sortBy === "name") {
+    } else if (deferredSortBy === "name") {
       campsWithDistance.sort((a, b) => a.title.localeCompare(b.title));
     }
 
     return campsWithDistance;
-  }, [data, filters, favorites, showFavoritesOnly, userLocation, sortBy]);
+  }, [data, deferredFilters, favorites, showFavoritesOnly, userLocation, deferredSortBy]);
 
   const toggleFilter = (
     type: "categories" | "communities" | "dateRanges",
