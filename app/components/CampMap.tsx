@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, memo } from "react";
-import { Crosshair } from "lucide-react";
+import React, { useState, useEffect, memo, useCallback } from "react";
+import { Crosshair, MapPin, X, Navigation } from "lucide-react";
 import { Camp } from "../lib/types";
 
 interface CampMapProps {
@@ -24,6 +24,8 @@ export const CampMap = memo(function CampMap({
   const markersRef = React.useRef<any[]>([]);
   const userMarkerRef = React.useRef<any>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [isSettingLocation, setIsSettingLocation] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
 
   useEffect(() => {
     const L = (window as any).L;
@@ -40,9 +42,8 @@ export const CampMap = memo(function CampMap({
           )
           .addTo(mapInstanceRef.current);
 
-        mapInstanceRef.current.on("click", (e: any) => {
-          onSetUserLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
-        });
+        // Store click handler reference for cleanup/update
+        mapInstanceRef.current._locationClickHandler = null;
 
         setMapReady(true);
       }
@@ -70,6 +71,35 @@ export const CampMap = memo(function CampMap({
       }
     };
   }, []);
+
+  // Handle click-to-set-location mode
+  useEffect(() => {
+    if (!mapReady || !mapInstanceRef.current) return;
+
+    const map = mapInstanceRef.current;
+
+    // Remove existing handler if any
+    if (map._locationClickHandler) {
+      map.off("click", map._locationClickHandler);
+      map._locationClickHandler = null;
+    }
+
+    if (isSettingLocation) {
+      const handler = (e: any) => {
+        onSetUserLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
+        setIsSettingLocation(false);
+      };
+      map._locationClickHandler = handler;
+      map.on("click", handler);
+    }
+
+    return () => {
+      if (map._locationClickHandler) {
+        map.off("click", map._locationClickHandler);
+        map._locationClickHandler = null;
+      }
+    };
+  }, [isSettingLocation, mapReady, onSetUserLocation]);
 
   useEffect(() => {
     const L = (window as any).L;
@@ -218,15 +248,118 @@ export const CampMap = memo(function CampMap({
     userMarkerRef.current = marker;
   }, [userLocation, mapReady, onSetUserLocation]);
 
+  const handleUseMyLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        onSetUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setIsGettingLocation(false);
+        // Center map on user location
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setView(
+            [position.coords.latitude, position.coords.longitude],
+            12
+          );
+        }
+      },
+      (error) => {
+        setIsGettingLocation(false);
+        alert("Unable to get your location. Please set it manually on the map.");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, [onSetUserLocation]);
+
+  const handleSetOnMap = useCallback(() => {
+    setIsSettingLocation(true);
+  }, []);
+
+  const handleCancelSetLocation = useCallback(() => {
+    setIsSettingLocation(false);
+  }, []);
+
+  const handleClearLocation = useCallback(() => {
+    onSetUserLocation(null as any);
+  }, [onSetUserLocation]);
+
   return (
     <div className="h-full w-full relative">
-      <div id="map" ref={mapRef} className="h-full w-full" />
-      {!userLocation && (
-        <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto bg-white/95 backdrop-blur-sm rounded-xl shadow-camp p-3 text-sm text-camp-bark/70 flex items-center gap-2">
-          <Crosshair className="w-4 h-4 text-indigo-500 flex-shrink-0" />
-          <span>Click anywhere on the map to set your location</span>
+      <div id="map" ref={mapRef} className={`h-full w-full ${isSettingLocation ? "cursor-crosshair" : ""}`} />
+
+      {/* Setting location mode indicator */}
+      {isSettingLocation && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-lg flex items-center gap-3 animate-fade-in">
+          <Crosshair className="w-5 h-5 animate-pulse" />
+          <span className="font-medium">Click on the map to set your location</span>
+          <button
+            onClick={handleCancelSetLocation}
+            className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Cancel setting location"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
+
+      {/* Location controls */}
+      <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto">
+        {!userLocation && !isSettingLocation && (
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-camp p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div className="flex items-center gap-2 text-sm text-camp-bark/70 px-2">
+              <Navigation className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+              <span>Set your location for distance info</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleUseMyLocation}
+                disabled={isGettingLocation}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-wait"
+              >
+                <Crosshair className={`w-4 h-4 ${isGettingLocation ? "animate-spin" : ""}`} />
+                {isGettingLocation ? "Getting..." : "Use My Location"}
+              </button>
+              <button
+                onClick={handleSetOnMap}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-camp-forest/10 hover:bg-camp-forest hover:text-white text-camp-forest text-sm font-medium rounded-lg transition-colors"
+              >
+                <MapPin className="w-4 h-4" />
+                Set on Map
+              </button>
+            </div>
+          </div>
+        )}
+
+        {userLocation && !isSettingLocation && (
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-camp p-2 flex items-center gap-2">
+            <div className="flex items-center gap-2 px-2 text-sm text-camp-bark/70">
+              <div className="w-3 h-3 bg-indigo-500 rounded-full" />
+              <span>Location set</span>
+            </div>
+            <button
+              onClick={handleSetOnMap}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-camp-forest/10 hover:bg-camp-forest hover:text-white text-camp-forest text-xs font-medium rounded-lg transition-colors"
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              Change
+            </button>
+            <button
+              onClick={handleClearLocation}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-500 hover:text-white text-rose-600 text-xs font-medium rounded-lg transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+              Clear
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 });
