@@ -1,0 +1,131 @@
+"use client";
+
+import { Heart, Navigation } from "lucide-react";
+import { Camp } from "../lib/types";
+import { Icons, getCategoryStyle } from "../lib/utils";
+
+interface CampListProps {
+  camps: Camp[];
+  onSelect: (camp: Camp) => void;
+  favorites: Set<string>;
+  onToggleFavorite: (id: string) => void;
+}
+
+export function CampList({
+  camps,
+  onSelect,
+  favorites,
+  onToggleFavorite,
+}: CampListProps) {
+  if (camps.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center p-8">
+        <div className="text-center animate-fade-in max-w-sm">
+          <div className="w-20 h-20 mx-auto mb-6 bg-camp-sand/50 rounded-2xl flex items-center justify-center text-camp-bark/30">
+            {Icons.search}
+          </div>
+          <h3 className="font-display text-xl font-bold text-camp-pine mb-2">
+            No camps found
+          </h3>
+          <p className="text-camp-bark/60 text-sm">
+            Try adjusting your filters to discover more adventures
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full overflow-y-auto p-6 bg-gradient-to-b from-camp-cream to-camp-warm">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
+        {camps.map((camp, i) => (
+          <div
+            key={`${camp.catalogId}-${i}`}
+            onClick={() => onSelect(camp)}
+            className={`group bg-white rounded-2xl p-5 shadow-camp camp-card-hover cursor-pointer border border-transparent hover:border-camp-terracotta/20 animate-slide-up opacity-0 stagger-${Math.min(
+              (i % 6) + 1,
+              6
+            )}`}
+            style={{ animationFillMode: "forwards" }}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between gap-2 mb-3">
+              <h3 className="font-display font-bold text-camp-pine leading-snug group-hover:text-camp-terracotta transition-colors flex-1">
+                {camp.title}
+              </h3>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(camp.catalogId);
+                }}
+                className={`flex-shrink-0 p-1.5 rounded-lg transition-all ${
+                  favorites.has(camp.catalogId)
+                    ? "text-rose-500 hover:bg-rose-50"
+                    : "text-camp-bark/30 hover:text-rose-400 hover:bg-rose-50"
+                }`}
+              >
+                <Heart
+                  className="w-5 h-5"
+                  fill={favorites.has(camp.catalogId) ? "currentColor" : "none"}
+                />
+              </button>
+              <div className="flex-shrink-0 px-3 py-1 bg-gradient-to-r from-camp-terracotta to-camp-terracotta-dark text-white font-bold text-sm rounded-lg shadow-sm">
+                ${camp.fee}
+              </div>
+            </div>
+
+            {/* Category & Distance badges */}
+            <div className="flex items-center gap-2 mb-4">
+              {(() => {
+                const style = getCategoryStyle(camp.category);
+                return (
+                  <span
+                    className={`inline-block px-2.5 py-1 ${style.bg} ${style.text} text-[10px] font-bold uppercase tracking-wider rounded-md`}
+                  >
+                    {camp.category}
+                  </span>
+                );
+              })()}
+              {camp.distance !== null && camp.distance !== undefined && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-md">
+                  <Navigation className="w-3 h-3" />
+                  {camp.distance < 0.1 ? "< 0.1" : camp.distance.toFixed(1)} mi
+                </span>
+              )}
+            </div>
+
+            {/* Details grid */}
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="flex items-start gap-2">
+                <div className="mt-0.5 text-camp-terracotta">{Icons.location}</div>
+                <div>
+                  <div className="font-semibold text-camp-pine text-xs">
+                    {camp.location}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="mt-0.5 text-camp-forest">{Icons.calendar}</div>
+                <div className="text-camp-bark/70 text-xs">
+                  {camp.startDate.monthName} {camp.startDate.day}
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="mt-0.5 text-camp-sun">{Icons.clock}</div>
+                <div className="text-camp-bark/70 text-xs">
+                  {camp.startTime.formatted} - {camp.endTime.formatted}
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="mt-0.5 text-camp-bark/50">{Icons.user}</div>
+                <div className="text-camp-bark/70 text-xs">
+                  Ages {camp.minAge}-{camp.maxAge}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
