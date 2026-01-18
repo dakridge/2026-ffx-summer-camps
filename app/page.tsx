@@ -567,11 +567,11 @@ export default function HomePage() {
                 )}
               </button>
             )}
-            <p className="text-[10px] text-camp-bark/50 mt-1.5">
-              {userLocation
-                ? "Drag pin on map to adjust"
-                : "Or click the map to set location"}
-            </p>
+            {userLocation && (
+              <p className="text-[10px] text-camp-bark/50 mt-1.5">
+                Drag pin on map to adjust
+              </p>
+            )}
           </div>
 
           {/* Sort */}

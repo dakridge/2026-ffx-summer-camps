@@ -23,9 +23,15 @@ export const CampMap = memo(function CampMap({
   const mapInstanceRef = React.useRef<any>(null);
   const markersRef = React.useRef<any[]>([]);
   const userMarkerRef = React.useRef<any>(null);
+  const onSetUserLocationRef = React.useRef(onSetUserLocation);
   const [mapReady, setMapReady] = useState(false);
   const [isSettingLocation, setIsSettingLocation] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+
+  // Keep ref updated
+  useEffect(() => {
+    onSetUserLocationRef.current = onSetUserLocation;
+  }, [onSetUserLocation]);
 
   useEffect(() => {
     const L = (window as any).L;
@@ -86,7 +92,7 @@ export const CampMap = memo(function CampMap({
 
     if (isSettingLocation) {
       const handler = (e: any) => {
-        onSetUserLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
+        onSetUserLocationRef.current({ lat: e.latlng.lat, lng: e.latlng.lng });
         setIsSettingLocation(false);
       };
       map._locationClickHandler = handler;
@@ -99,7 +105,7 @@ export const CampMap = memo(function CampMap({
         map._locationClickHandler = null;
       }
     };
-  }, [isSettingLocation, mapReady, onSetUserLocation]);
+  }, [isSettingLocation, mapReady]);
 
   useEffect(() => {
     const L = (window as any).L;
