@@ -929,7 +929,7 @@ export default function HomePage() {
               rel="noopener noreferrer"
               className="text-camp-terracotta hover:underline font-medium"
             >
-              SearchCradley
+              Cradley
             </a>
           </p>
         </div>

@@ -17,9 +17,9 @@ export const metadata: Metadata = {
     "camp planner",
     "Northern Virginia summer camps",
   ],
-  authors: [{ name: "SearchCradley", url: "https://searchcradley.com" }],
-  creator: "SearchCradley",
-  publisher: "SearchCradley",
+  authors: [{ name: "Cradley", url: "https://searchcradley.com" }],
+  creator: "Cradley",
+  publisher: "Cradley",
   metadataBase: new URL("https://ffxcamps.searchcradley.com"),
   alternates: {
     canonical: "/",
@@ -78,7 +78,7 @@ const jsonLd = {
   },
   author: {
     "@type": "Organization",
-    name: "SearchCradley",
+    name: "Cradley",
     url: "https://searchcradley.com",
   },
   aggregateRating: {
