@@ -83,6 +83,7 @@ export const CampMap = memo(function CampMap({
     if (!mapReady || !mapInstanceRef.current) return;
 
     const map = mapInstanceRef.current;
+    const container = map.getContainer();
 
     // Remove existing handler if any
     if (map._locationClickHandler) {
@@ -91,12 +92,18 @@ export const CampMap = memo(function CampMap({
     }
 
     if (isSettingLocation) {
+      // Add crosshair cursor
+      container.style.cursor = "crosshair";
+
       const handler = (e: any) => {
         onSetUserLocationRef.current({ lat: e.latlng.lat, lng: e.latlng.lng });
         setIsSettingLocation(false);
       };
       map._locationClickHandler = handler;
       map.on("click", handler);
+    } else {
+      // Reset cursor
+      container.style.cursor = "";
     }
 
     return () => {
@@ -104,6 +111,7 @@ export const CampMap = memo(function CampMap({
         map.off("click", map._locationClickHandler);
         map._locationClickHandler = null;
       }
+      container.style.cursor = "";
     };
   }, [isSettingLocation, mapReady]);
 
@@ -298,7 +306,7 @@ export const CampMap = memo(function CampMap({
 
   return (
     <div className="h-full w-full relative">
-      <div id="map" ref={mapRef} className={`h-full w-full ${isSettingLocation ? "cursor-crosshair" : ""}`} />
+      <div id="map" ref={mapRef} className="h-full w-full" />
 
       {/* Setting location mode indicator */}
       {isSettingLocation && (
