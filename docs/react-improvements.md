@@ -38,16 +38,16 @@ Checklist for improving this codebase against React best practices.
 ## High Priority
 
 ### Performance
-- [ ] Add `useCallback` to `setPlannerCamp` handler
-- [ ] Add `useCallback` to `toggleFavorite` handler
-- [ ] Add `useCallback` to `getNearMe` handler
-- [ ] Add `useCallback` to `clearUserLocation` handler
-- [ ] Wrap `CampList` in `React.memo()`
-- [ ] Wrap `CampMap` in `React.memo()`
-- [ ] Wrap `CampCalendar` in `React.memo()`
-- [ ] Wrap `MultiWeekPlanner` in `React.memo()`
-- [ ] Add `useMemo` for category styles computation
-- [ ] Add `useMemo` for grouped data structures
+- [x] Add `useCallback` to `setPlannerCamp` handler
+- [x] Add `useCallback` to `toggleFavorite` handler
+- [x] Add `useCallback` to `getNearMe` handler
+- [x] Add `useCallback` to `clearUserLocation` handler
+- [x] Wrap `CampList` in `React.memo()`
+- [x] Wrap `CampMap` in `React.memo()`
+- [x] Wrap `CampCalendar` in `React.memo()`
+- [x] Wrap `MultiWeekPlanner` in `React.memo()`
+- [x] Add `useMemo` for category styles computation
+- [x] Add `useMemo` for grouped data structures
 
 ### State Management
 - [ ] Consider `useReducer` for related filter/view state
@@ -104,14 +104,14 @@ Checklist for improving this codebase against React best practices.
 | Component Structure | 8 | 6 | 2 |
 | Accessibility | 7 | 7 | 0 |
 | Error Handling | 6 | 2 | 4 |
-| Performance | 10 | 0 | 10 |
+| Performance | 10 | 10 | 0 |
 | State Management | 2 | 0 | 2 |
 | Code Splitting | 4 | 0 | 4 |
 | Custom Hooks | 4 | 0 | 4 |
 | TypeScript | 4 | 0 | 4 |
 | Map Optimization | 2 | 0 | 2 |
 | Code Quality | 4 | 0 | 4 |
-| **Total** | **51** | **15** | **36** |
+| **Total** | **51** | **25** | **26** |
 
 
 ## Recommended Next Steps
@@ -119,4 +119,5 @@ Checklist for improving this codebase against React best practices.
   1. ~~Create components/ folder - Move CampList, CampMap, CampCalendar, MultiWeekPlanner~~ DONE
   2. ~~Add ErrorBoundary - Wrap root content~~ DONE
   3. ~~Accessibility pass - Focus on buttons and interactive elements first~~ DONE
-  4. Performance hooks - Add useCallback to prevent child re-renders
+  4. ~~Performance hooks - Add useCallback to prevent child re-renders~~ DONE
+  5. Code Splitting - Add React.lazy() for heavy components

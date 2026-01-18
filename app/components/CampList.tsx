@@ -1,5 +1,6 @@
 "use client";
 
+import React, { memo } from "react";
 import { Heart, Navigation } from "lucide-react";
 import { Camp } from "../lib/types";
 import { Icons, getCategoryStyle } from "../lib/utils";
@@ -11,7 +12,7 @@ interface CampListProps {
   onToggleFavorite: (id: string) => void;
 }
 
-export function CampList({
+export const CampList = memo(function CampList({
   camps,
   onSelect,
   favorites,
@@ -145,4 +146,4 @@ export function CampList({
       </div>
     </div>
   );
-}
+});

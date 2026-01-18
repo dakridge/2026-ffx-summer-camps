@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 import { ChevronDown } from "lucide-react";
 import { Camp } from "../lib/types";
 import { Icons, getCategoryStyle } from "../lib/utils";
@@ -10,7 +10,7 @@ interface CampCalendarProps {
   onSelect: (camp: Camp) => void;
 }
 
-export function CampCalendar({ camps, onSelect }: CampCalendarProps) {
+export const CampCalendar = memo(function CampCalendar({ camps, onSelect }: CampCalendarProps) {
   const [collapsedWeeks, setCollapsedWeeks] = useState<Set<string>>(new Set());
 
   const toggleWeek = (dateRange: string) => {
@@ -191,4 +191,4 @@ export function CampCalendar({ camps, onSelect }: CampCalendarProps) {
       </div>
     </div>
   );
-}
+});

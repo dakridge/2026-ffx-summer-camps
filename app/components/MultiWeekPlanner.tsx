@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 import { X, AlertCircle, Check, Link2 } from "lucide-react";
 import {
   Document,
@@ -215,7 +215,7 @@ export interface MultiWeekPlannerProps {
   onSaveSharedPlan: () => void;
 }
 
-export function MultiWeekPlanner({
+export const MultiWeekPlanner = memo(function MultiWeekPlanner({
   camps,
   allCamps,
   plannedCamps,
@@ -662,4 +662,4 @@ export function MultiWeekPlanner({
       </div>
     </div>
   );
-}
+});

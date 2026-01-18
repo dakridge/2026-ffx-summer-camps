@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Search,
   MapPin,
@@ -155,7 +155,7 @@ export default function HomePage() {
     localStorage.setItem("camp-planner", JSON.stringify(obj));
   }, [plannedCamps, isSharedPlan, loading]);
 
-  const setPlannerCamp = (week: string, camp: Camp | null) => {
+  const setPlannerCamp = useCallback((week: string, camp: Camp | null) => {
     setPlannedCamps((prev) => {
       const next = new Map(prev);
       if (camp === null) {
@@ -165,9 +165,9 @@ export default function HomePage() {
       }
       return next;
     });
-  };
+  }, []);
 
-  const toggleFavorite = (catalogId: string) => {
+  const toggleFavorite = useCallback((catalogId: string) => {
     setFavorites((prev) => {
       const next = new Set(prev);
       if (next.has(catalogId)) {
@@ -177,9 +177,9 @@ export default function HomePage() {
       }
       return next;
     });
-  };
+  }, []);
 
-  const getNearMe = () => {
+  const getNearMe = useCallback(() => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser");
       return;
@@ -208,13 +208,13 @@ export default function HomePage() {
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  };
+  }, []);
 
-  const clearUserLocation = () => {
+  const clearUserLocation = useCallback(() => {
     setUserLocation(null);
     localStorage.removeItem("camp-user-location");
-    if (sortBy === "distance") setSortBy("default");
-  };
+    setSortBy((current) => current === "distance" ? "default" : current);
+  }, []);
 
   useEffect(() => {
     if (loading) return;

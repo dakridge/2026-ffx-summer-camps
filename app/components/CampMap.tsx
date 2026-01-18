@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { Crosshair } from "lucide-react";
 import { Camp } from "../lib/types";
 
@@ -12,7 +12,7 @@ interface CampMapProps {
   onSetUserLocation: (loc: { lat: number; lng: number }) => void;
 }
 
-export function CampMap({
+export const CampMap = memo(function CampMap({
   camps,
   onSelect,
   onFilterLocation,
@@ -229,4 +229,4 @@ export function CampMap({
       )}
     </div>
   );
-}
+});
