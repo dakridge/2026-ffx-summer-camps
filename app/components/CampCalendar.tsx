@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useMemo, memo } from "react";
-import { ChevronDown, Navigation, CalendarPlus, Check, Minus } from "lucide-react";
+import React, { useState, useMemo, memo, useEffect } from "react";
+import { ChevronDown, Navigation, CalendarPlus, Check, Minus, ChevronsUpDown, ChevronsDownUp } from "lucide-react";
 import { Camp } from "../lib/types";
 import { Icons, getCategoryStyle, formatTime } from "../lib/utils";
+
+const STORAGE_KEY = "calendar-collapsed-weeks";
 
 interface CampCalendarProps {
   camps: Camp[];
@@ -13,7 +15,24 @@ interface CampCalendarProps {
 }
 
 export const CampCalendar = memo(function CampCalendar({ camps, onSelect, plannedCamps, onPlanCamp }: CampCalendarProps) {
-  const [collapsedWeeks, setCollapsedWeeks] = useState<Set<string>>(new Set());
+  const [collapsedWeeks, setCollapsedWeeks] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  // Persist collapsed state to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...collapsedWeeks]));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [collapsedWeeks]);
 
   const isInPlanner = (camp: Camp): boolean => {
     const weekCamps = plannedCamps.get(camp.dateRange);
@@ -59,6 +78,18 @@ export const CampCalendar = memo(function CampCalendar({ camps, onSelect, planne
     });
   }, [camps]);
 
+  const collapseAll = () => {
+    const allWeeks = campsByWeek.map(([dateRange]) => dateRange);
+    setCollapsedWeeks(new Set(allWeeks));
+  };
+
+  const expandAll = () => {
+    setCollapsedWeeks(new Set());
+  };
+
+  const allCollapsed = campsByWeek.length > 0 && collapsedWeeks.size === campsByWeek.length;
+  const allExpanded = collapsedWeeks.size === 0;
+
   if (camps.length === 0) {
     return (
       <div className="h-full flex items-center justify-center p-8">
@@ -87,6 +118,25 @@ export const CampCalendar = memo(function CampCalendar({ camps, onSelect, planne
           <p className="text-camp-bark/60 text-sm">
             View camps by week to plan your summer
           </p>
+        </div>
+
+        <div className="flex justify-center gap-2 mb-4">
+          <button
+            onClick={expandAll}
+            disabled={allExpanded}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-camp-forest disabled:opacity-50 disabled:cursor-not-allowed bg-camp-forest/10 text-camp-forest hover:bg-camp-forest hover:text-white"
+          >
+            <ChevronsUpDown className="w-4 h-4" aria-hidden="true" />
+            Expand All
+          </button>
+          <button
+            onClick={collapseAll}
+            disabled={allCollapsed}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-camp-forest disabled:opacity-50 disabled:cursor-not-allowed bg-camp-forest/10 text-camp-forest hover:bg-camp-forest hover:text-white"
+          >
+            <ChevronsDownUp className="w-4 h-4" aria-hidden="true" />
+            Collapse All
+          </button>
         </div>
 
         <div className="space-y-4">
