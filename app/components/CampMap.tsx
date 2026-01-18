@@ -302,7 +302,7 @@ export const CampMap = memo(function CampMap({
 
       {/* Setting location mode indicator */}
       {isSettingLocation && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-lg flex items-center gap-3 animate-fade-in">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-lg flex items-center gap-3 animate-fade-in">
           <Crosshair className="w-5 h-5 animate-pulse" />
           <span className="font-medium">Click on the map to set your location</span>
           <button
@@ -316,7 +316,7 @@ export const CampMap = memo(function CampMap({
       )}
 
       {/* Location controls */}
-      <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto">
+      <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto z-[1000]">
         {!userLocation && !isSettingLocation && (
           <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-camp p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <div className="flex items-center gap-2 text-sm text-camp-bark/70 px-2">
