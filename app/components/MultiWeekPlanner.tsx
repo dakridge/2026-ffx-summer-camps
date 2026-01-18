@@ -316,9 +316,24 @@ export const MultiWeekPlanner = memo(function MultiWeekPlanner({
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
+      // Filter weeks to only include range from first to last planned camp
+      let firstPlannedIndex = -1;
+      let lastPlannedIndex = -1;
+      allWeeks.forEach((week, index) => {
+        const camps = plannedCamps.get(week.dateRange);
+        if (camps && camps.length > 0) {
+          if (firstPlannedIndex === -1) firstPlannedIndex = index;
+          lastPlannedIndex = index;
+        }
+      });
+
+      const trimmedWeeks = firstPlannedIndex >= 0
+        ? allWeeks.slice(firstPlannedIndex, lastPlannedIndex + 1)
+        : [];
+
       const blob = await pdf(
         <PlannerPDF
-          weeks={allWeeks}
+          weeks={trimmedWeeks}
           plannedCamps={plannedCamps}
           totalCost={totalCost}
           totalCamps={totalCampsPlanned}
