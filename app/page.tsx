@@ -1100,16 +1100,16 @@ function WelcomePopup({ onDismiss }: { onDismiss: () => void }) {
         className="bg-white rounded-3xl max-w-md w-full shadow-camp-lg animate-scale-in overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header with sunset gradient inspired by og-image */}
-        <div className="bg-gradient-to-br from-[#1B3A4B] via-[#D4793A] to-[#E8A55F] p-6 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-white/20 rounded-2xl flex items-center justify-center">
-            <Tent className="w-8 h-8 text-white" aria-hidden="true" />
+        {/* Header with Cradley branding */}
+        <div className="bg-[oklch(0.95_0.04_340)] p-6 text-center">
+          <div className="w-14 h-14 mx-auto mb-4 bg-[oklch(0.65_0.15_340)] rounded-full flex items-center justify-center shadow-sm">
+            <span className="text-white text-2xl" style={{ fontFamily: '"Outfit Variable", sans-serif' }}>C</span>
           </div>
-          <h2 id="welcome-title" className="font-display text-2xl font-bold text-white mb-2">
+          <h2 id="welcome-title" className="font-display text-2xl font-bold text-[oklch(0.25_0.01_265)] mb-2">
             Welcome to Camp Explorer!
           </h2>
-          <p className="text-white/90 text-sm">
-            Your free guide to Fairfax County summer camps
+          <p className="text-[oklch(0.5_0.01_265)] text-sm">
+            A free tool by Cradley
           </p>
         </div>
 
@@ -1121,17 +1121,17 @@ function WelcomePopup({ onDismiss }: { onDismiss: () => void }) {
             and plan your whole summer in one place.
           </p>
 
-          <div className="bg-camp-warm rounded-xl p-4">
-            <p className="text-camp-bark/80 text-sm">
-              <span className="font-semibold text-camp-pine">100% free.</span>{" "}
-              Made with ❤️ by the team at{" "}
+          <div className="bg-[oklch(0.96_0.01_85)] rounded-xl p-4">
+            <p className="text-[oklch(0.35_0.01_265)] text-sm">
+              <span className="font-semibold text-[oklch(0.25_0.01_265)]">100% free.</span>{" "}
+              Made with care by the team at{" "}
               <a
                 href="https://searchcradley.com?ref=ffxcamps-welcome"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-camp-terracotta font-semibold hover:underline"
+                className="text-[oklch(0.65_0.15_340)] font-semibold hover:underline"
               >
-                SearchCradley
+                Cradley
               </a>
               , where we help people find what matters most.
             </p>
@@ -1140,7 +1140,7 @@ function WelcomePopup({ onDismiss }: { onDismiss: () => void }) {
           <div className="flex flex-col gap-3 pt-2">
             <button
               onClick={onDismiss}
-              className="w-full py-3 bg-camp-forest hover:bg-camp-pine text-white font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-camp-forest focus:ring-offset-2"
+              className="w-full py-3 bg-[oklch(0.65_0.15_340)] hover:bg-[oklch(0.58_0.15_340)] text-white font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-[oklch(0.65_0.15_340)] focus:ring-offset-2"
             >
               Start Exploring
             </button>
@@ -1148,9 +1148,9 @@ function WelcomePopup({ onDismiss }: { onDismiss: () => void }) {
               href="https://searchcradley.com?ref=ffxcamps-welcome"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-2.5 text-center text-camp-bark/60 hover:text-camp-terracotta text-sm font-medium transition-colors"
+              className="w-full py-2.5 text-center text-[oklch(0.5_0.01_265)] hover:text-[oklch(0.65_0.15_340)] text-sm font-medium transition-colors"
             >
-              Learn more about SearchCradley →
+              Learn more about Cradley →
             </a>
           </div>
         </div>
