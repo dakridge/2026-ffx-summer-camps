@@ -18,7 +18,7 @@ npm run build
 npm run start
 
 # Convert XLSX camp data to JSON (with geocoding)
-bun xlsx-to-json.ts data/FCPA\ Camp\ Spreadsheet.xlsx data/fcpa-camps.json
+bun scripts/xlsx-to-json.ts data/FCPA\ Camp\ Spreadsheet.xlsx data/fcpa-camps.json
 ```
 
 ## Architecture
@@ -27,7 +27,7 @@ This is a Fairfax County Parks summer camp explorer built with Next.js 15 (App R
 
 ### Data Flow
 1. **Source**: `data/FCPA Camp Spreadsheet.xlsx` - raw camp data from FCPA
-2. **Conversion**: `xlsx-to-json.ts` parses the XLSX, infers types (dates, times, ages, fees), geocodes locations via Nominatim (cached in `data/.geocode-cache.json`), and outputs structured JSON
+2. **Conversion**: `scripts/xlsx-to-json.ts` parses the XLSX, infers types (dates, times, ages, fees), geocodes locations via Nominatim (cached in `data/.geocode-cache.json`), and outputs structured JSON
 3. **API**: `/app/api/camps/route.ts` serves `data/fcpa-camps.json` at `/api/camps`
 4. **Frontend**: `/app/page.tsx` is a client component that fetches and renders camps with filtering
 
@@ -36,7 +36,7 @@ This is a Fairfax County Parks summer camp explorer built with Next.js 15 (App R
 - `app/page.tsx` - Main client component with all camp explorer UI (~2000 lines)
 - `app/globals.css` - Tailwind CSS and custom styles
 - `app/api/camps/route.ts` - API route serving camp data
-- `xlsx-to-json.ts` - Data pipeline with geocoding and type inference
+- `scripts/xlsx-to-json.ts` - Data pipeline with geocoding and type inference
 - `data/location-addresses.json` - Manual address mappings for geocoding failures
 
 ### Frontend State

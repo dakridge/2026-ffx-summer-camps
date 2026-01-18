@@ -35,6 +35,7 @@ export interface Camp {
   durationDays: number;
   coordinates?: { lat: number; lng: number };
   distance?: number | null;
+  description?: string;
 }
 
 export interface CampsData {

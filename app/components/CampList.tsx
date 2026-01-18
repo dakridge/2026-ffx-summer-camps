@@ -174,6 +174,13 @@ export const CampList = memo(function CampList({
               </div>
             </div>
 
+            {/* Description preview */}
+            {camp.description && (
+              <p className="mt-3 text-xs text-camp-bark/60 line-clamp-2">
+                {camp.description}
+              </p>
+            )}
+
             {/* Add to Planner button */}
             <div className="mt-4 pt-3 border-t border-camp-sand">
               {plannedCamps.has(camp.dateRange) && plannedCamps.get(camp.dateRange)?.catalogId === camp.catalogId ? (

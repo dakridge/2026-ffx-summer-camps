@@ -1447,6 +1447,17 @@ function CampModal({
             </div>
           </div>
 
+          {camp.description && (
+            <div className="mb-4 sm:mb-6">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-camp-bark/50 mb-2">
+                About This Camp
+              </h3>
+              <p className="text-sm sm:text-base text-camp-bark/80 leading-relaxed">
+                {camp.description}
+              </p>
+            </div>
+          )}
+
           {camp.coordinates && (
             <ModalMap coordinates={camp.coordinates} location={camp.location} />
           )}
