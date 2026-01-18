@@ -60,4 +60,6 @@ export interface Filters {
   maxFee: number | null;
   startHour: number | null;
   endHour: number | null;
+  fromDate: string | null; // ISO date string (YYYY-MM-DD)
+  toDate: string | null;   // ISO date string (YYYY-MM-DD)
 }

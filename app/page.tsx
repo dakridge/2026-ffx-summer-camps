@@ -22,6 +22,8 @@ import {
   ClipboardList,
   Navigation,
   Crosshair,
+  CalendarPlus,
+  Check,
 } from "lucide-react";
 import { Camp, CampsData, Filters } from "./lib/types";
 import { Icons, getCategoryStyle } from "./lib/utils";
@@ -37,6 +39,8 @@ const initialFilters: Filters = {
   maxFee: null,
   startHour: null,
   endHour: null,
+  fromDate: null,
+  toDate: null,
 };
 
 // Haversine distance calculation (returns miles)
@@ -72,6 +76,8 @@ function filtersToParams(filters: Filters): URLSearchParams {
     params.set("week", filters.dateRanges.join("|"));
   if (filters.childAge !== null) params.set("age", filters.childAge.toString());
   if (filters.maxFee !== null) params.set("maxFee", filters.maxFee.toString());
+  if (filters.fromDate) params.set("from", filters.fromDate);
+  if (filters.toDate) params.set("to", filters.toDate);
   return params;
 }
 
@@ -86,6 +92,8 @@ function paramsToFilters(params: URLSearchParams): Filters {
     maxFee: params.get("maxFee") ? parseInt(params.get("maxFee")!) : null,
     startHour: null,
     endHour: null,
+    fromDate: params.get("from") || null,
+    toDate: params.get("to") || null,
   };
 }
 
@@ -327,6 +335,10 @@ export default function HomePage() {
         return false;
       if (deferredFilters.endHour !== null && camp.endTime.hour < deferredFilters.endHour)
         return false;
+      if (deferredFilters.fromDate !== null && camp.startDate.iso < deferredFilters.fromDate)
+        return false;
+      if (deferredFilters.toDate !== null && camp.startDate.iso > deferredFilters.toDate)
+        return false;
       return true;
     });
 
@@ -390,7 +402,9 @@ export default function HomePage() {
     filters.childAge !== null ||
     filters.maxFee !== null ||
     filters.startHour !== null ||
-    filters.endHour !== null;
+    filters.endHour !== null ||
+    filters.fromDate !== null ||
+    filters.toDate !== null;
 
   if (loading) {
     return (
@@ -705,6 +719,52 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Date Range */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-camp-bark/50 mb-2">
+              Date Range
+            </label>
+            <div className="flex flex-col gap-2">
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-camp-forest">
+                  {Icons.calendar}
+                </div>
+                <input
+                  type="date"
+                  placeholder="From date"
+                  value={filters.fromDate ?? ""}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      fromDate: e.target.value || null,
+                    }))
+                  }
+                  className="w-full pl-9 pr-4 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30"
+                />
+              </div>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-camp-forest">
+                  {Icons.calendar}
+                </div>
+                <input
+                  type="date"
+                  placeholder="To date"
+                  value={filters.toDate ?? ""}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      toDate: e.target.value || null,
+                    }))
+                  }
+                  className="w-full pl-9 pr-4 py-2.5 bg-camp-warm border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30"
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-camp-bark/50 mt-1.5">
+              Filter camps by start date
+            </p>
+          </div>
+
           {/* Time Filters */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-camp-bark/50 mb-2">
@@ -1011,6 +1071,8 @@ export default function HomePage() {
               onSelect={setSelectedCamp}
               favorites={favorites}
               onToggleFavorite={toggleFavorite}
+              plannedCamps={plannedCamps}
+              onPlanCamp={setPlannerCamp}
             />
           )}
           {view === "map" && (
@@ -1029,7 +1091,12 @@ export default function HomePage() {
             />
           )}
           {view === "calendar" && (
-            <CampCalendar camps={filteredCamps} onSelect={setSelectedCamp} />
+            <CampCalendar
+              camps={filteredCamps}
+              onSelect={setSelectedCamp}
+              plannedCamps={plannedCamps}
+              onPlanCamp={setPlannerCamp}
+            />
           )}
           {view === "planner" && data && (
             <MultiWeekPlanner
@@ -1056,7 +1123,12 @@ export default function HomePage() {
 
       {/* Modal */}
       {selectedCamp && (
-        <CampModal camp={selectedCamp} onClose={() => setSelectedCamp(null)} />
+        <CampModal
+          camp={selectedCamp}
+          onClose={() => setSelectedCamp(null)}
+          plannedCamps={plannedCamps}
+          onPlanCamp={setPlannerCamp}
+        />
       )}
     </div>
   );
@@ -1162,12 +1234,36 @@ function ModalMap({
 function CampModal({
   camp,
   onClose,
+  plannedCamps,
+  onPlanCamp,
 }: {
   camp: Camp;
   onClose: () => void;
+  plannedCamps: Map<string, Camp>;
+  onPlanCamp: (week: string, camp: Camp | null) => void;
 }) {
   const style = getCategoryStyle(camp.category);
   const modalRef = React.useRef<HTMLDivElement>(null);
+  const [showConflict, setShowConflict] = React.useState(false);
+  const [existingCamp, setExistingCamp] = React.useState<Camp | null>(null);
+
+  const isInPlanner = plannedCamps.has(camp.dateRange) && plannedCamps.get(camp.dateRange)?.catalogId === camp.catalogId;
+
+  const handleAddToPlanner = () => {
+    const existing = plannedCamps.get(camp.dateRange);
+    if (existing && existing.catalogId !== camp.catalogId) {
+      setExistingCamp(existing);
+      setShowConflict(true);
+    } else {
+      onPlanCamp(camp.dateRange, camp);
+    }
+  };
+
+  const handleSwap = () => {
+    onPlanCamp(camp.dateRange, camp);
+    setShowConflict(false);
+    setExistingCamp(null);
+  };
 
   // Focus trap and escape key handling
   React.useEffect(() => {
@@ -1339,6 +1435,49 @@ function CampModal({
               ID: <span className="font-mono text-camp-bark">{camp.catalogId}</span>
             </div>
           </div>
+
+          {/* Add to Planner section */}
+          {!showConflict ? (
+            <div className="pt-4 border-t border-camp-sand">
+              {isInPlanner ? (
+                <div className="flex items-center justify-center gap-2 py-3 bg-camp-forest/10 rounded-xl text-camp-forest font-medium">
+                  <Check className="w-5 h-5" />
+                  <span>Added to Planner</span>
+                </div>
+              ) : (
+                <button
+                  onClick={handleAddToPlanner}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-camp-forest hover:bg-camp-pine text-white font-medium rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-camp-forest focus:ring-offset-2"
+                >
+                  <CalendarPlus className="w-5 h-5" />
+                  <span>Add to Planner</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="pt-4 border-t border-camp-sand space-y-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p className="text-sm font-semibold text-amber-800 mb-2">Week Already Planned</p>
+                <p className="text-xs text-amber-700 mb-3">
+                  You already have <span className="font-semibold">{existingCamp?.title}</span> planned for {camp.dateRange}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowConflict(false)}
+                    className="flex-1 py-2 border border-amber-300 text-amber-800 text-sm font-medium rounded-lg hover:bg-amber-100 transition-colors"
+                  >
+                    Keep Current
+                  </button>
+                  <button
+                    onClick={handleSwap}
+                    className="flex-1 py-2 bg-camp-forest hover:bg-camp-pine text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    Replace with This
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
