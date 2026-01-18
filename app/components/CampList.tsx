@@ -39,10 +39,19 @@ export function CampList({
     <div className="h-full overflow-y-auto p-6 bg-gradient-to-b from-camp-cream to-camp-warm">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
         {camps.map((camp, i) => (
-          <div
+          <article
             key={`${camp.catalogId}-${i}`}
+            role="button"
+            tabIndex={0}
             onClick={() => onSelect(camp)}
-            className={`group bg-white rounded-2xl p-5 shadow-camp camp-card-hover cursor-pointer border border-transparent hover:border-camp-terracotta/20 animate-slide-up opacity-0 stagger-${Math.min(
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelect(camp);
+              }
+            }}
+            aria-label={`${camp.title}, ${camp.category}, $${camp.fee}, Ages ${camp.minAge}-${camp.maxAge}`}
+            className={`group bg-white rounded-2xl p-5 shadow-camp camp-card-hover cursor-pointer border border-transparent hover:border-camp-terracotta/20 focus:outline-none focus:ring-2 focus:ring-camp-terracotta focus:ring-offset-2 animate-slide-up opacity-0 stagger-${Math.min(
               (i % 6) + 1,
               6
             )}`}
@@ -58,7 +67,14 @@ export function CampList({
                   e.stopPropagation();
                   onToggleFavorite(camp.catalogId);
                 }}
-                className={`flex-shrink-0 p-1.5 rounded-lg transition-all ${
+                onKeyDown={(e) => e.stopPropagation()}
+                aria-label={
+                  favorites.has(camp.catalogId)
+                    ? `Remove ${camp.title} from favorites`
+                    : `Add ${camp.title} to favorites`
+                }
+                aria-pressed={favorites.has(camp.catalogId)}
+                className={`flex-shrink-0 p-1.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-rose-400 ${
                   favorites.has(camp.catalogId)
                     ? "text-rose-500 hover:bg-rose-50"
                     : "text-camp-bark/30 hover:text-rose-400 hover:bg-rose-50"
@@ -67,6 +83,7 @@ export function CampList({
                 <Heart
                   className="w-5 h-5"
                   fill={favorites.has(camp.catalogId) ? "currentColor" : "none"}
+                  aria-hidden="true"
                 />
               </button>
               <div className="flex-shrink-0 px-3 py-1 bg-gradient-to-r from-camp-terracotta to-camp-terracotta-dark text-white font-bold text-sm rounded-lg shadow-sm">
@@ -123,7 +140,7 @@ export function CampList({
                 </div>
               </div>
             </div>
-          </div>
+          </article>
         ))}
       </div>
     </div>

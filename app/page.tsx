@@ -478,8 +478,17 @@ export default function HomePage() {
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/30 z-40 lg:hidden"
+          role="button"
+          tabIndex={0}
+          aria-label="Close sidebar"
+          className="fixed inset-0 bg-black/30 z-40 lg:hidden cursor-pointer"
           onClick={() => setSidebarOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " " || e.key === "Escape") {
+              e.preventDefault();
+              setSidebarOpen(false);
+            }
+          }}
         />
       )}
 
@@ -516,9 +525,10 @@ export default function HomePage() {
               </div>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2 hover:bg-camp-warm rounded-lg transition-colors text-camp-bark/50 hover:text-camp-bark lg:hidden"
+                aria-label="Close sidebar"
+                className="p-2 hover:bg-camp-warm rounded-lg transition-colors text-camp-bark/50 hover:text-camp-bark lg:hidden focus:outline-none focus:ring-2 focus:ring-camp-terracotta"
               >
-                {Icons.x}
+                <span aria-hidden="true">{Icons.x}</span>
               </button>
             </div>
             <p className="text-sm text-camp-bark/70 mt-3">
@@ -562,10 +572,10 @@ export default function HomePage() {
                 </div>
                 <button
                   onClick={clearUserLocation}
-                  className="p-2.5 bg-camp-warm border border-camp-sand rounded-xl text-camp-bark/50 hover:text-camp-bark hover:border-camp-bark/30 transition-all"
-                  title="Clear location"
+                  aria-label="Clear location"
+                  className="p-2.5 bg-camp-warm border border-camp-sand rounded-xl text-camp-bark/50 hover:text-camp-bark hover:border-camp-bark/30 transition-all focus:outline-none focus:ring-2 focus:ring-camp-terracotta"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4" aria-hidden="true" />
                 </button>
               </div>
             ) : (
@@ -895,17 +905,19 @@ export default function HomePage() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main id="main-content" className="flex-1 flex flex-col overflow-hidden">
         {/* Toolbar */}
         <div className="bg-white border-b border-camp-sand px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="relative p-2 hover:bg-camp-warm rounded-lg transition-colors text-camp-bark/60 hover:text-camp-bark lg:hidden"
+              aria-label={sidebarOpen ? "Close filters" : "Open filters"}
+              aria-expanded={sidebarOpen}
+              className="relative p-2 hover:bg-camp-warm rounded-lg transition-colors text-camp-bark/60 hover:text-camp-bark lg:hidden focus:outline-none focus:ring-2 focus:ring-camp-terracotta"
             >
-              {Icons.filter}
+              <span aria-hidden="true">{Icons.filter}</span>
               {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-camp-terracotta rounded-full" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-camp-terracotta rounded-full" aria-label="Filters active" />
               )}
             </button>
             <div className="flex items-center gap-2">
@@ -918,56 +930,72 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-1 bg-camp-warm p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-camp-warm p-1 rounded-xl" role="tablist" aria-label="View mode">
             <button
               onClick={() => setView("list")}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              role="tab"
+              aria-selected={view === "list"}
+              aria-controls="camp-content"
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-camp-terracotta ${
                 view === "list"
                   ? "bg-white text-camp-pine shadow-camp"
                   : "text-camp-bark/60 hover:text-camp-bark"
               }`}
             >
-              {Icons.list}
+              <span aria-hidden="true">{Icons.list}</span>
               <span className="hidden sm:inline">List</span>
+              <span className="sr-only sm:hidden">List view</span>
             </button>
             <button
               onClick={() => setView("map")}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              role="tab"
+              aria-selected={view === "map"}
+              aria-controls="camp-content"
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-camp-terracotta ${
                 view === "map"
                   ? "bg-white text-camp-pine shadow-camp"
                   : "text-camp-bark/60 hover:text-camp-bark"
               }`}
             >
-              {Icons.map}
+              <span aria-hidden="true">{Icons.map}</span>
               <span className="hidden sm:inline">Map</span>
+              <span className="sr-only sm:hidden">Map view</span>
             </button>
             <button
               onClick={() => setView("calendar")}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              role="tab"
+              aria-selected={view === "calendar"}
+              aria-controls="camp-content"
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-camp-terracotta ${
                 view === "calendar"
                   ? "bg-white text-camp-pine shadow-camp"
                   : "text-camp-bark/60 hover:text-camp-bark"
               }`}
             >
-              {Icons.calendar}
+              <span aria-hidden="true">{Icons.calendar}</span>
               <span className="hidden sm:inline">Calendar</span>
+              <span className="sr-only sm:hidden">Calendar view</span>
             </button>
             <button
               onClick={() => setView("planner")}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              role="tab"
+              aria-selected={view === "planner"}
+              aria-controls="camp-content"
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-camp-terracotta ${
                 view === "planner"
                   ? "bg-white text-camp-pine shadow-camp"
                   : "text-camp-bark/60 hover:text-camp-bark"
               }`}
             >
-              {Icons.planner}
+              <span aria-hidden="true">{Icons.planner}</span>
               <span className="hidden sm:inline">Planner</span>
+              <span className="sr-only sm:hidden">Planner view</span>
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden relative">
+        <div id="camp-content" role="tabpanel" className="flex-1 overflow-hidden relative">
           {view === "list" && (
             <CampList
               camps={filteredCamps}
@@ -1130,22 +1158,68 @@ function CampModal({
   onClose: () => void;
 }) {
   const style = getCategoryStyle(camp.category);
+  const modalRef = React.useRef<HTMLDivElement>(null);
+
+  // Focus trap and escape key handling
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (e.key === "Tab" && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    // Focus the modal when it opens
+    const closeButton = modalRef.current?.querySelector<HTMLElement>('button[aria-label="Close dialog"]');
+    closeButton?.focus();
+
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
 
   return (
     <div
       className="fixed inset-0 bg-camp-pine/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4 animate-fade-in"
       onClick={onClose}
+      role="presentation"
     >
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
         className="bg-white rounded-t-3xl sm:rounded-3xl max-w-xl w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto shadow-camp-lg animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="h-2 bg-gradient-to-r from-camp-terracotta via-camp-sun to-camp-forest rounded-t-3xl" />
+        <div className="h-2 bg-gradient-to-r from-camp-terracotta via-camp-sun to-camp-forest rounded-t-3xl" aria-hidden="true" />
 
         <div className="p-4 sm:p-6 pb-4 border-b border-camp-sand">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <h2 className="font-display text-xl sm:text-2xl font-bold text-camp-pine mb-2">
+              <h2 id="modal-title" className="font-display text-xl sm:text-2xl font-bold text-camp-pine mb-2">
                 {camp.title}
               </h2>
               <span
@@ -1156,9 +1230,10 @@ function CampModal({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-camp-warm rounded-xl transition-colors text-camp-bark/50 hover:text-camp-bark"
+              aria-label="Close dialog"
+              className="p-2 hover:bg-camp-warm rounded-xl transition-colors text-camp-bark/50 hover:text-camp-bark focus:outline-none focus:ring-2 focus:ring-camp-terracotta"
             >
-              {Icons.x}
+              <span aria-hidden="true">{Icons.x}</span>
             </button>
           </div>
         </div>

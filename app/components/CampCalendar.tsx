@@ -89,7 +89,9 @@ export function CampCalendar({ camps, onSelect }: CampCalendarProps) {
               >
                 <button
                   onClick={() => toggleWeek(dateRange)}
-                  className="w-full bg-gradient-to-r from-camp-forest to-camp-forest-light px-4 sm:px-6 py-3 flex items-center justify-between cursor-pointer hover:from-camp-forest-light hover:to-camp-forest transition-all"
+                  aria-expanded={!collapsedWeeks.has(dateRange)}
+                  aria-controls={`week-${weekIndex}`}
+                  className="w-full bg-gradient-to-r from-camp-forest to-camp-forest-light px-4 sm:px-6 py-3 flex items-center justify-between cursor-pointer hover:from-camp-forest-light hover:to-camp-forest transition-all focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-camp-forest"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
@@ -117,19 +119,32 @@ export function CampCalendar({ camps, onSelect }: CampCalendarProps) {
                       className={`w-5 h-5 text-white transition-transform ${
                         collapsedWeeks.has(dateRange) ? "-rotate-90" : ""
                       }`}
+                      aria-hidden="true"
                     />
                   </div>
                 </button>
 
                 {!collapsedWeeks.has(dateRange) && (
-                  <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  <div
+                    id={`week-${weekIndex}`}
+                    className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+                  >
                     {weekCamps.map((camp, i) => {
                       const style = getCategoryStyle(camp.category);
                       return (
-                        <div
+                        <article
                           key={`${camp.catalogId}-${i}`}
+                          role="button"
+                          tabIndex={0}
                           onClick={() => onSelect(camp)}
-                          className="group bg-camp-warm hover:bg-camp-sand rounded-xl p-3 cursor-pointer transition-all hover:shadow-camp border border-transparent hover:border-camp-terracotta/20"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              onSelect(camp);
+                            }
+                          }}
+                          aria-label={`${camp.title}, $${camp.fee}, ${camp.startTime.formatted}, Ages ${camp.minAge}-${camp.maxAge}`}
+                          className="group bg-camp-warm hover:bg-camp-sand rounded-xl p-3 cursor-pointer transition-all hover:shadow-camp border border-transparent hover:border-camp-terracotta/20 focus:outline-none focus:ring-2 focus:ring-camp-terracotta"
                         >
                           <div className="flex items-start justify-between gap-2 mb-2">
                             <h4 className="font-semibold text-camp-pine text-sm leading-tight group-hover:text-camp-terracotta transition-colors line-clamp-2">
@@ -158,7 +173,7 @@ export function CampCalendar({ camps, onSelect }: CampCalendarProps) {
                             {Icons.location}
                             <span className="truncate">{camp.location}</span>
                           </div>
-                        </div>
+                        </article>
                       );
                     })}
                   </div>

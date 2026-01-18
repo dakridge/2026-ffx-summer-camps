@@ -345,9 +345,12 @@ export function MultiWeekPlanner({
         </div>
 
         {isSharedPlan && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 print:hidden">
+          <div
+            role="alert"
+            className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 print:hidden"
+          >
             <div className="flex items-start gap-3">
-              <div className="text-amber-500 mt-0.5">
+              <div className="text-amber-500 mt-0.5" aria-hidden="true">
                 <AlertCircle className="w-5 h-5" />
               </div>
               <div className="flex-1">
@@ -357,7 +360,7 @@ export function MultiWeekPlanner({
                 </p>
                 <button
                   onClick={onSaveSharedPlan}
-                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
                 >
                   Save to My Plan
                 </button>
@@ -396,20 +399,20 @@ export function MultiWeekPlanner({
             <div className="flex gap-2 print:hidden">
               <button
                 onClick={copyShareLink}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                   linkCopied
-                    ? "bg-camp-forest text-white"
-                    : "bg-camp-terracotta hover:bg-camp-terracotta-dark text-white"
+                    ? "bg-camp-forest text-white focus:ring-camp-forest"
+                    : "bg-camp-terracotta hover:bg-camp-terracotta-dark text-white focus:ring-camp-terracotta"
                 }`}
               >
                 {linkCopied ? (
                   <>
-                    <Check className="w-4 h-4" />
+                    <Check className="w-4 h-4" aria-hidden="true" />
                     Link Copied!
                   </>
                 ) : (
                   <>
-                    <Link2 className="w-4 h-4" />
+                    <Link2 className="w-4 h-4" aria-hidden="true" />
                     Share Plan
                   </>
                 )}
@@ -417,16 +420,17 @@ export function MultiWeekPlanner({
               <button
                 onClick={handleDownloadPDF}
                 disabled={isGeneratingPDF}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-camp-forest hover:bg-camp-pine disabled:bg-camp-forest/50 text-white rounded-xl text-sm font-medium transition-colors"
+                aria-busy={isGeneratingPDF}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-camp-forest hover:bg-camp-pine disabled:bg-camp-forest/50 text-white rounded-xl text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-camp-forest focus:ring-offset-2"
               >
                 {isGeneratingPDF ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
                     Generating...
                   </>
                 ) : (
                   <>
-                    {Icons.download}
+                    <span aria-hidden="true">{Icons.download}</span>
                     Download PDF
                   </>
                 )}
@@ -496,10 +500,10 @@ export function MultiWeekPlanner({
                     {plannedCamp ? (
                       <button
                         onClick={() => onPlanCamp(week.dateRange, null)}
-                        className="p-2 text-camp-bark/40 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors print:hidden"
-                        title="Remove from plan"
+                        aria-label={`Remove ${plannedCamp.title} from plan`}
+                        className="p-2 text-camp-bark/40 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-rose-400 print:hidden"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4" aria-hidden="true" />
                       </button>
                     ) : hasAvailableCamps ? (
                       <button
@@ -507,7 +511,9 @@ export function MultiWeekPlanner({
                           setExpandedWeek(isExpanded ? null : week.dateRange);
                           if (isExpanded) setPlannerSearch("");
                         }}
-                        className="px-3 py-1.5 bg-camp-forest text-white text-xs font-semibold rounded-lg hover:bg-camp-pine transition-colors print:hidden"
+                        aria-expanded={isExpanded}
+                        aria-controls={`week-camps-${i}`}
+                        className="px-3 py-1.5 bg-camp-forest text-white text-xs font-semibold rounded-lg hover:bg-camp-pine transition-colors focus:outline-none focus:ring-2 focus:ring-camp-forest focus:ring-offset-2 print:hidden"
                       >
                         {isExpanded ? "Close" : "Select"}
                       </button>
@@ -533,17 +539,24 @@ export function MultiWeekPlanner({
                       : availableCamps;
 
                     return (
-                      <div className="border-t border-camp-sand p-3 bg-camp-warm/50 print:hidden">
+                      <div
+                        id={`week-camps-${i}`}
+                        className="border-t border-camp-sand p-3 bg-camp-warm/50 print:hidden"
+                      >
                         <div className="relative mb-3">
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-camp-bark/40">
+                          <label htmlFor={`search-camps-${i}`} className="sr-only">
+                            Search camps for week of {week.startDate.monthName} {week.startDate.day}
+                          </label>
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-camp-bark/40" aria-hidden="true">
                             {Icons.search}
                           </div>
                           <input
+                            id={`search-camps-${i}`}
                             type="text"
                             placeholder="Search camps..."
                             value={plannerSearch}
                             onChange={(e) => setPlannerSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-white border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30 focus:border-camp-terracotta/50"
+                            className="w-full pl-10 pr-4 py-2 bg-white border border-camp-sand rounded-xl text-sm text-camp-pine placeholder:text-camp-bark/40 transition-all hover:border-camp-terracotta/30 focus:border-camp-terracotta/50 focus:outline-none focus:ring-2 focus:ring-camp-terracotta"
                           />
                         </div>
 
@@ -556,17 +569,18 @@ export function MultiWeekPlanner({
                             {filteredCamps.map((camp, j) => {
                               const style = getCategoryStyle(camp.category);
                               return (
-                                <div
+                                <article
                                   key={`${camp.catalogId}-${j}`}
                                   className="bg-white rounded-xl p-3 border border-camp-sand hover:border-camp-terracotta/30 transition-all"
                                 >
                                   <div className="flex items-start justify-between gap-2 mb-2">
-                                    <h4
+                                    <button
+                                      type="button"
                                       onClick={() => onSelect(camp)}
-                                      className="font-semibold text-camp-pine text-sm leading-tight cursor-pointer hover:text-camp-terracotta transition-colors line-clamp-2"
+                                      className="font-semibold text-camp-pine text-sm leading-tight cursor-pointer hover:text-camp-terracotta transition-colors line-clamp-2 text-left focus:outline-none focus:underline"
                                     >
                                       {camp.title}
-                                    </h4>
+                                    </button>
                                     <span className="flex-shrink-0 px-2 py-0.5 bg-camp-terracotta text-white text-xs font-bold rounded">
                                       ${camp.fee}
                                     </span>
@@ -579,11 +593,13 @@ export function MultiWeekPlanner({
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-xs text-camp-bark/60">
                                       <span className="flex items-center gap-1">
-                                        {Icons.clock}
+                                        <span aria-hidden="true">{Icons.clock}</span>
+                                        <span className="sr-only">Time:</span>
                                         {camp.startTime.formatted}
                                       </span>
                                       <span className="flex items-center gap-1">
-                                        {Icons.user}
+                                        <span aria-hidden="true">{Icons.user}</span>
+                                        <span className="sr-only">Ages:</span>
                                         {camp.minAge}-{camp.maxAge}
                                       </span>
                                     </div>
@@ -593,12 +609,13 @@ export function MultiWeekPlanner({
                                         setExpandedWeek(null);
                                         setPlannerSearch("");
                                       }}
-                                      className="px-2 py-1 bg-camp-forest text-white text-xs font-semibold rounded hover:bg-camp-pine transition-colors"
+                                      aria-label={`Add ${camp.title} to plan`}
+                                      className="px-2 py-1 bg-camp-forest text-white text-xs font-semibold rounded hover:bg-camp-pine transition-colors focus:outline-none focus:ring-2 focus:ring-camp-forest focus:ring-offset-1"
                                     >
                                       Add
                                     </button>
                                   </div>
-                                </div>
+                                </article>
                               );
                             })}
                           </div>

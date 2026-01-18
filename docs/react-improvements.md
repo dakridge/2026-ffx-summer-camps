@@ -17,13 +17,13 @@ Checklist for improving this codebase against React best practices.
 - [x] Move types to `lib/types.ts`
 
 ### Accessibility
-- [ ] Add `aria-label` to icon-only buttons
-- [ ] Convert clickable divs to `<button>` elements
-- [ ] Add `role` attributes to custom interactive elements
-- [ ] Add keyboard navigation (`onKeyDown`) to interactive elements
-- [ ] Add focus management for modals
-- [ ] Add focus trap in modal component
-- [ ] Add skip-to-content link
+- [x] Add `aria-label` to icon-only buttons
+- [x] Convert clickable divs to `<button>` elements
+- [x] Add `role` attributes to custom interactive elements
+- [x] Add keyboard navigation (`onKeyDown`) to interactive elements
+- [x] Add focus management for modals
+- [x] Add focus trap in modal component
+- [x] Add skip-to-content link
 
 ### Error Handling
 - [x] Create `components/ErrorBoundary.tsx`
@@ -102,7 +102,7 @@ Checklist for improving this codebase against React best practices.
 | Category | Total | Done | Remaining |
 |----------|-------|------|-----------|
 | Component Structure | 8 | 6 | 2 |
-| Accessibility | 7 | 0 | 7 |
+| Accessibility | 7 | 7 | 0 |
 | Error Handling | 6 | 2 | 4 |
 | Performance | 10 | 0 | 10 |
 | State Management | 2 | 0 | 2 |
@@ -111,12 +111,12 @@ Checklist for improving this codebase against React best practices.
 | TypeScript | 4 | 0 | 4 |
 | Map Optimization | 2 | 0 | 2 |
 | Code Quality | 4 | 0 | 4 |
-| **Total** | **51** | **8** | **43** |
+| **Total** | **51** | **15** | **36** |
 
 
 ## Recommended Next Steps
 
   1. ~~Create components/ folder - Move CampList, CampMap, CampCalendar, MultiWeekPlanner~~ DONE
   2. ~~Add ErrorBoundary - Wrap root content~~ DONE
-  3. Accessibility pass - Focus on buttons and interactive elements first
+  3. ~~Accessibility pass - Focus on buttons and interactive elements first~~ DONE
   4. Performance hooks - Add useCallback to prevent child re-renders
