@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback, useDeferredValue } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useDeferredValue, Suspense, lazy } from "react";
 import {
   Search,
   MapPin,
@@ -27,7 +27,24 @@ import {
 } from "lucide-react";
 import { Camp, CampsData, Filters } from "./lib/types";
 import { Icons, getCategoryStyle } from "./lib/utils";
-import { CampList, CampMap, CampCalendar, MultiWeekPlanner } from "./components";
+import { CampList } from "./components";
+
+// Lazy load heavy components that aren't immediately visible
+const CampMap = lazy(() => import("./components/CampMap").then(mod => ({ default: mod.CampMap })));
+const CampCalendar = lazy(() => import("./components/CampCalendar").then(mod => ({ default: mod.CampCalendar })));
+const MultiWeekPlanner = lazy(() => import("./components/MultiWeekPlanner").then(mod => ({ default: mod.MultiWeekPlanner })));
+
+// Loading fallback for lazy-loaded views
+function ViewLoadingFallback() {
+  return (
+    <div className="h-full flex items-center justify-center bg-gradient-to-b from-camp-cream to-camp-warm">
+      <div className="text-center animate-fade-in">
+        <div className="w-12 h-12 mx-auto mb-4 border-3 border-camp-sand border-t-camp-terracotta rounded-full animate-spin" />
+        <p className="text-camp-bark/60 text-sm font-medium">Loading view...</p>
+      </div>
+    </div>
+  );
+}
 
 const initialFilters: Filters = {
   search: "",
@@ -1076,47 +1093,53 @@ export default function HomePage() {
             />
           )}
           {view === "map" && (
-            <CampMap
-              camps={filteredCamps}
-              onSelect={setSelectedCamp}
-              onFilterLocation={(loc) => {
-                setFilters((prev) => ({ ...prev, locations: [loc] }));
-                setView("list");
-              }}
-              userLocation={userLocation}
-              onSetUserLocation={(loc) => {
-                setUserLocation(loc);
-                setSortBy("distance");
-              }}
-            />
+            <Suspense fallback={<ViewLoadingFallback />}>
+              <CampMap
+                camps={filteredCamps}
+                onSelect={setSelectedCamp}
+                onFilterLocation={(loc) => {
+                  setFilters((prev) => ({ ...prev, locations: [loc] }));
+                  setView("list");
+                }}
+                userLocation={userLocation}
+                onSetUserLocation={(loc) => {
+                  setUserLocation(loc);
+                  setSortBy("distance");
+                }}
+              />
+            </Suspense>
           )}
           {view === "calendar" && (
-            <CampCalendar
-              camps={filteredCamps}
-              onSelect={setSelectedCamp}
-              plannedCamps={plannedCamps}
-              onPlanCamp={setPlannerCamp}
-            />
+            <Suspense fallback={<ViewLoadingFallback />}>
+              <CampCalendar
+                camps={filteredCamps}
+                onSelect={setSelectedCamp}
+                plannedCamps={plannedCamps}
+                onPlanCamp={setPlannerCamp}
+              />
+            </Suspense>
           )}
           {view === "planner" && data && (
-            <MultiWeekPlanner
-              camps={filteredCamps}
-              allCamps={data.camps}
-              plannedCamps={plannedCamps}
-              onPlanCamp={setPlannerCamp}
-              onSelect={setSelectedCamp}
-              isSharedPlan={isSharedPlan}
-              onSaveSharedPlan={() => {
-                setIsSharedPlan(false);
-                const params = new URLSearchParams(window.location.search);
-                params.delete("plan");
-                params.set("view", "planner");
-                const newUrl = params.toString()
-                  ? `?${params.toString()}`
-                  : window.location.pathname;
-                window.history.replaceState({}, "", newUrl);
-              }}
-            />
+            <Suspense fallback={<ViewLoadingFallback />}>
+              <MultiWeekPlanner
+                camps={filteredCamps}
+                allCamps={data.camps}
+                plannedCamps={plannedCamps}
+                onPlanCamp={setPlannerCamp}
+                onSelect={setSelectedCamp}
+                isSharedPlan={isSharedPlan}
+                onSaveSharedPlan={() => {
+                  setIsSharedPlan(false);
+                  const params = new URLSearchParams(window.location.search);
+                  params.delete("plan");
+                  params.set("view", "planner");
+                  const newUrl = params.toString()
+                    ? `?${params.toString()}`
+                    : window.location.pathname;
+                  window.history.replaceState({}, "", newUrl);
+                }}
+              />
+            </Suspense>
           )}
         </div>
       </main>

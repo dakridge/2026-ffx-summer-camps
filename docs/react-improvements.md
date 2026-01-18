@@ -58,10 +58,10 @@ Checklist for improving this codebase against React best practices.
 ## Medium Priority
 
 ### Code Splitting
-- [ ] Add `React.lazy()` for `CampMap` component
-- [ ] Add `React.lazy()` for `CampCalendar` component
-- [ ] Add `React.lazy()` for `MultiWeekPlanner` component
-- [ ] Add `Suspense` boundaries with loading fallbacks
+- [x] Add `React.lazy()` for `CampMap` component
+- [x] Add `React.lazy()` for `CampCalendar` component
+- [x] Add `React.lazy()` for `MultiWeekPlanner` component
+- [x] Add `Suspense` boundaries with loading fallbacks
 
 ### Custom Hooks
 - [ ] Create `useGeolocation()` hook
@@ -106,12 +106,12 @@ Checklist for improving this codebase against React best practices.
 | Error Handling | 6 | 2 | 4 |
 | Performance | 10 | 10 | 0 |
 | State Management | 2 | 0 | 2 |
-| Code Splitting | 4 | 0 | 4 |
+| Code Splitting | 4 | 4 | 0 |
 | Custom Hooks | 4 | 0 | 4 |
 | TypeScript | 4 | 0 | 4 |
 | Map Optimization | 2 | 0 | 2 |
 | Code Quality | 4 | 0 | 4 |
-| **Total** | **51** | **25** | **26** |
+| **Total** | **51** | **29** | **22** |
 
 
 ## Recommended Next Steps
@@ -120,4 +120,5 @@ Checklist for improving this codebase against React best practices.
   2. ~~Add ErrorBoundary - Wrap root content~~ DONE
   3. ~~Accessibility pass - Focus on buttons and interactive elements first~~ DONE
   4. ~~Performance hooks - Add useCallback to prevent child re-renders~~ DONE
-  5. Code Splitting - Add React.lazy() for heavy components
+  5. ~~Code Splitting - Add React.lazy() for heavy components~~ DONE
+  6. Custom Hooks - Extract useGeolocation, usePersistentState, useLeaflet
