@@ -123,6 +123,38 @@ const pdfStyles = StyleSheet.create({
     color: "#9CA3AF",
     textAlign: "center",
   },
+  brandingContainer: {
+    marginTop: 24,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  brandingLogo: {
+    width: 14,
+    height: 14,
+    backgroundColor: "#C2185B",
+    borderRadius: 7,
+    marginRight: 6,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  brandingLogoText: {
+    color: "#FFFFFF",
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+  },
+  brandingText: {
+    fontSize: 9,
+    color: "#6B7280",
+  },
+  brandingLink: {
+    fontSize: 9,
+    color: "#C2185B",
+    fontFamily: "Helvetica-Bold",
+  },
 });
 
 interface PlannerPDFProps {
@@ -201,9 +233,24 @@ function PlannerPDF({ weeks, plannedCamps, totalCost, totalCamps }: PlannerPDFPr
         </View>
 
         <Text style={pdfStyles.generated}>
-          Generated on {new Date().toLocaleDateString()} · Summer Camp Explorer
-          · fairfax-camps.vercel.app
+          Generated on {new Date().toLocaleDateString()}
         </Text>
+
+        {/* Cradley branding */}
+        <View style={pdfStyles.brandingContainer}>
+          <View style={pdfStyles.brandingLogo}>
+            <Text style={pdfStyles.brandingLogoText}>C</Text>
+          </View>
+          <Text style={pdfStyles.brandingText}>
+            A free tool by{" "}
+          </Text>
+          <Text style={pdfStyles.brandingLink}>
+            Cradley
+          </Text>
+          <Text style={pdfStyles.brandingText}>
+            {" "}· searchcradley.com
+          </Text>
+        </View>
       </Page>
     </Document>
   );

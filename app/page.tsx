@@ -438,6 +438,19 @@ export default function HomePage() {
             <div className="w-2 h-2 rounded-full bg-camp-sun/60 animate-bounce-slow" style={{ animationDelay: "0.2s" }} />
             <div className="w-2 h-2 rounded-full bg-camp-forest/60 animate-bounce-slow" style={{ animationDelay: "0.4s" }} />
           </div>
+
+          {/* Cradley branding */}
+          <div className="mt-8 pt-6 border-t border-camp-sand/40">
+            <a
+              href="https://searchcradley.com?ref=ffxcamps-loading"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-camp-bark/50 hover:text-[oklch(0.55_0.15_340)] transition-colors"
+            >
+              <span className="w-5 h-5 bg-[oklch(0.65_0.15_340)] rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm">C</span>
+              <span className="text-xs font-medium">A free tool by Cradley</span>
+            </a>
+          </div>
         </div>
       </div>
     );
@@ -1103,6 +1116,19 @@ export default function HomePage() {
       {showWelcome && !loading && (
         <WelcomePopup onDismiss={dismissWelcome} />
       )}
+
+      {/* Persistent Cradley floating badge */}
+      <a
+        href="https://searchcradley.com?ref=ffxcamps-badge"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-4 right-4 z-40 flex items-center gap-2 px-3 py-2 bg-white/95 backdrop-blur-sm border border-camp-sand/50 rounded-full shadow-lg hover:shadow-xl hover:border-[oklch(0.65_0.15_340)]/30 transition-all group"
+      >
+        <span className="w-5 h-5 bg-[oklch(0.65_0.15_340)] rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-sm">C</span>
+        <span className="text-xs font-medium text-camp-bark/70 group-hover:text-[oklch(0.55_0.15_340)] transition-colors">
+          Made by Cradley
+        </span>
+      </a>
     </div>
   );
 }
