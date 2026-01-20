@@ -99,7 +99,7 @@ export default function HomePage() {
   const [data, setData] = useState<CampsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<Filters>(initialFilters);
-  const [view, setView] = useState<"list" | "map" | "calendar" | "planner">(
+  const [view, setView] = useState<"list" | "map" | "grouped" | "planner">(
     "list"
   );
   const [plannedCamps, setPlannedCamps] = useState<Map<string, Camp[]>>(
@@ -159,7 +159,7 @@ export default function HomePage() {
     setFilters(paramsToFilters(params));
 
     const v = params.get("view");
-    if (v === "map" || v === "calendar" || v === "planner") setView(v);
+    if (v === "map" || v === "grouped" || v === "planner") setView(v);
   }, []);
 
   // Persist planned camps to localStorage (skip while loading or viewing shared plan)
@@ -231,7 +231,7 @@ export default function HomePage() {
     const timeoutId = setTimeout(() => {
       const params = filtersToParams(filters);
       if (view === "map") params.set("view", "map");
-      if (view === "calendar") params.set("view", "calendar");
+      if (view === "grouped") params.set("view", "grouped");
       if (view === "planner") params.set("view", "planner");
       const newUrl = params.toString()
         ? `?${params.toString()}`
@@ -1006,19 +1006,19 @@ export default function HomePage() {
               <span className="sr-only sm:hidden">Map view</span>
             </button>
             <button
-              onClick={() => setView("calendar")}
+              onClick={() => setView("grouped")}
               role="tab"
-              aria-selected={view === "calendar"}
+              aria-selected={view === "grouped"}
               aria-controls="camp-content"
               className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-camp-terracotta ${
-                view === "calendar"
+                view === "grouped"
                   ? "bg-white text-camp-pine shadow-camp"
                   : "text-camp-bark/60 hover:text-camp-bark"
               }`}
             >
-              <span aria-hidden="true">{Icons.calendar}</span>
-              <span className="hidden sm:inline">Calendar</span>
-              <span className="sr-only sm:hidden">Calendar view</span>
+              <span aria-hidden="true">{Icons.layers}</span>
+              <span className="hidden sm:inline">Grouped</span>
+              <span className="sr-only sm:hidden">Grouped view</span>
             </button>
             <button
               onClick={() => setView("planner")}
@@ -1067,7 +1067,7 @@ export default function HomePage() {
               />
             </Suspense>
           )}
-          {view === "calendar" && (
+          {view === "grouped" && (
             <Suspense fallback={<ViewLoadingFallback />}>
               <CampCalendar
                 camps={filteredCamps}

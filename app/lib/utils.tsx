@@ -21,6 +21,7 @@ import {
   Check,
   AlertCircle,
   Download,
+  Layers,
 } from "lucide-react";
 
 // Category styles
@@ -164,4 +165,5 @@ export const Icons = {
   check: <Check className="w-4 h-4" strokeWidth={2} />,
   alert: <AlertCircle className="w-4 h-4" strokeWidth={2} />,
   download: <Download className="w-5 h-5" strokeWidth={2} />,
+  layers: <Layers className="w-5 h-5" strokeWidth={2} />,
 };
