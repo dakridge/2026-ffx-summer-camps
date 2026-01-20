@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, CalendarPlus, Check, Minus, Clock, Sun, Moon } from "lucide-react";
 import { Camp } from "../lib/types";
 import { formatTime } from "../lib/utils";
@@ -21,6 +22,15 @@ export function ExtendedCarePopover({
   anchorRef,
 }: ExtendedCarePopoverProps) {
   const popoverRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if we're on mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const isInPlanner = (camp: Camp): boolean => {
     const weekCamps = plannedCamps.get(camp.dateRange);
@@ -84,21 +94,8 @@ export function ExtendedCarePopover({
     return null;
   }
 
-  return (
+  const popoverContent = (
     <>
-      {/* Mobile backdrop */}
-      <div
-        className="fixed inset-0 bg-black/30 z-[99] sm:hidden"
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose();
-        }}
-      />
-      <div
-        ref={popoverRef}
-        className="fixed bottom-0 left-0 right-0 z-[100] bg-white rounded-t-2xl shadow-lg border-t border-camp-sand overflow-hidden animate-slide-up sm:animate-fade-in sm:absolute sm:bottom-auto sm:left-0 sm:right-auto sm:top-full sm:mt-2 sm:w-72 sm:rounded-xl sm:border"
-        onClick={(e) => e.stopPropagation()}
-      >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-violet-50 border-b border-violet-100">
         <div className="flex items-center gap-2">
@@ -175,7 +172,41 @@ export function ExtendedCarePopover({
           Extended care at same location & week
         </p>
       </div>
-    </div>
     </>
+  );
+
+  // Mobile: render as portal to body for proper fixed positioning
+  if (isMobile) {
+    return createPortal(
+      <>
+        <div
+          className="fixed inset-0 bg-black/30 z-[100]"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+        />
+        <div
+          ref={popoverRef}
+          className="fixed bottom-0 left-0 right-0 z-[101] bg-white rounded-t-2xl shadow-lg border-t border-camp-sand overflow-hidden animate-slide-up"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {popoverContent}
+        </div>
+      </>,
+      document.body
+    );
+  }
+
+  // Desktop: render inline as positioned popover
+  return (
+    <div
+      ref={popoverRef}
+      className="absolute z-[100] mt-2 w-72 bg-white rounded-xl shadow-lg border border-camp-sand overflow-hidden animate-fade-in"
+      style={{ left: 0, top: "100%" }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {popoverContent}
+    </div>
   );
 }
