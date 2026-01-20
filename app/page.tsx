@@ -812,30 +812,27 @@ export default function HomePage() {
                   setFilters((prev) => ({
                     ...prev,
                     hideExtendedCare: e.target.checked,
-                    // Disable "only with extended care" if hiding extended care
-                    onlyWithExtendedCare: e.target.checked ? false : prev.onlyWithExtendedCare,
                   }))
                 }
                 className="w-4 h-4 rounded border-camp-sand text-camp-forest focus:ring-camp-forest cursor-pointer"
               />
               <span className="text-sm text-camp-bark group-hover:text-camp-pine transition-colors">
-                Hide Extended Care
+                Hide Extended Care listings
               </span>
             </label>
             <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={filters.onlyWithExtendedCare}
-                disabled={filters.hideExtendedCare}
                 onChange={(e) =>
                   setFilters((prev) => ({
                     ...prev,
                     onlyWithExtendedCare: e.target.checked,
                   }))
                 }
-                className="w-4 h-4 rounded border-camp-sand text-violet-600 focus:ring-violet-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-4 h-4 rounded border-camp-sand text-violet-600 focus:ring-violet-500 cursor-pointer"
               />
-              <span className={`text-sm group-hover:text-camp-pine transition-colors ${filters.hideExtendedCare ? 'text-camp-bark/40' : 'text-camp-bark'}`}>
+              <span className="text-sm text-camp-bark group-hover:text-camp-pine transition-colors">
                 Only camps with extended care
               </span>
             </label>
