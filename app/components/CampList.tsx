@@ -1,27 +1,34 @@
 "use client";
 
-import React, { memo } from "react";
-import { Heart, Navigation, CalendarPlus, Check, Minus } from "lucide-react";
-import { Camp } from "../lib/types";
+import React, { memo, useState, useRef } from "react";
+import { Heart, Navigation, CalendarPlus, Check, Minus, Clock } from "lucide-react";
+import { Camp, hasExtendedCareAvailable, getExtendedCareCamps } from "../lib/types";
 import { Icons, getCategoryStyle, formatTime } from "../lib/utils";
+import { ExtendedCarePopover } from "./ExtendedCarePopover";
 
 interface CampListProps {
   camps: Camp[];
+  allCamps: Camp[];
   onSelect: (camp: Camp) => void;
   favorites: Set<string>;
   onToggleFavorite: (id: string) => void;
   plannedCamps: Map<string, Camp[]>;
   onPlanCamp: (week: string, camp: Camp | null, action?: "add" | "remove") => void;
+  extendedCareAvailability: Set<string>;
 }
 
 export const CampList = memo(function CampList({
   camps,
+  allCamps,
   onSelect,
   favorites,
   onToggleFavorite,
   plannedCamps,
   onPlanCamp,
+  extendedCareAvailability,
 }: CampListProps) {
+  const [openPopoverCampId, setOpenPopoverCampId] = useState<string | null>(null);
+  const badgeRefs = useRef<Map<string, HTMLButtonElement | null>>(new Map());
   const isInPlanner = (camp: Camp): boolean => {
     const weekCamps = plannedCamps.get(camp.dateRange);
     return weekCamps?.some(c => c.catalogId === camp.catalogId) ?? false;
@@ -72,7 +79,7 @@ export const CampList = memo(function CampList({
             className={`group bg-white rounded-2xl p-5 shadow-camp camp-card-hover cursor-pointer border border-transparent hover:border-camp-terracotta/20 focus:outline-none focus:ring-2 focus:ring-camp-terracotta focus:ring-offset-2 animate-slide-up opacity-0 stagger-${Math.min(
               (i % 6) + 1,
               6
-            )}`}
+            )} ${openPopoverCampId === camp.catalogId ? "z-50 relative" : ""}`}
             style={{ animationFillMode: "forwards" }}
           >
             {/* Header */}
@@ -110,7 +117,7 @@ export const CampList = memo(function CampList({
             </div>
 
             {/* Category & Distance badges */}
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
               {(() => {
                 const style = getCategoryStyle(camp.category);
                 return (
@@ -126,6 +133,37 @@ export const CampList = memo(function CampList({
                   <Navigation className="w-3 h-3" />
                   {camp.distance < 0.1 ? "< 0.1" : camp.distance.toFixed(1)} mi
                 </span>
+              )}
+              {hasExtendedCareAvailable(camp, extendedCareAvailability) && (
+                <div className="relative">
+                  <button
+                    ref={(el) => {
+                      badgeRefs.current.set(camp.catalogId, el);
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenPopoverCampId(
+                        openPopoverCampId === camp.catalogId ? null : camp.catalogId
+                      );
+                    }}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-violet-50 text-violet-600 text-[10px] font-bold rounded-md hover:bg-violet-100 transition-colors cursor-pointer"
+                    aria-label="View extended care options"
+                    aria-expanded={openPopoverCampId === camp.catalogId}
+                  >
+                    <Clock className="w-3 h-3" />
+                    Extended Care
+                  </button>
+                  {openPopoverCampId === camp.catalogId && (
+                    <ExtendedCarePopover
+                      camps={getExtendedCareCamps(camp.location, camp.dateRange, allCamps)}
+                      onClose={() => setOpenPopoverCampId(null)}
+                      onPlanCamp={onPlanCamp}
+                      plannedCamps={plannedCamps}
+                      anchorRef={{ current: badgeRefs.current.get(camp.catalogId) ?? null }}
+                    />
+                  )}
+                </div>
               )}
             </div>
 

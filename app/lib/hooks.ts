@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useDeferredValue } from "react";
-import { Camp, Filters } from "./types";
+import { Camp, Filters, isExtendedCare, buildExtendedCareAvailability, hasExtendedCareAvailable } from "./types";
 
 // =============================================================================
 // useGeolocation - Handle browser geolocation with loading state
@@ -242,6 +242,9 @@ export function useCampFiltering({
   const deferredSortBy = useDeferredValue(sortBy);
 
   const filteredCamps = useMemo(() => {
+    // Build extended care availability set for filtering
+    const extendedCareAvailability = buildExtendedCareAvailability(camps);
+
     let result = camps.filter((camp) => {
       if (showFavoritesOnly && !favorites.has(camp.catalogId)) return false;
 
@@ -273,6 +276,10 @@ export function useCampFiltering({
       if (deferredFilters.fromDate !== null && camp.startDate.iso < deferredFilters.fromDate)
         return false;
       if (deferredFilters.toDate !== null && camp.startDate.iso > deferredFilters.toDate)
+        return false;
+      if (deferredFilters.hideExtendedCare && isExtendedCare(camp))
+        return false;
+      if (deferredFilters.onlyWithExtendedCare && !hasExtendedCareAvailable(camp, extendedCareAvailability))
         return false;
 
       return true;
