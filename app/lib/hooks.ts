@@ -279,8 +279,12 @@ export function useCampFiltering({
         return false;
       if (deferredFilters.hideExtendedCare && isExtendedCare(camp))
         return false;
-      if (deferredFilters.onlyWithExtendedCare && !hasExtendedCareAvailable(camp, extendedCareAvailability))
-        return false;
+      if (deferredFilters.onlyWithExtendedCare) {
+        // Keep extended care camps themselves, and activity camps that have EC available
+        const isEC = isExtendedCare(camp);
+        const hasEC = hasExtendedCareAvailable(camp, extendedCareAvailability);
+        if (!isEC && !hasEC) return false;
+      }
 
       return true;
     });
