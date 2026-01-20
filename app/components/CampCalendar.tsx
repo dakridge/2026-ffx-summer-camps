@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useMemo, memo, useEffect } from "react";
-import { ChevronDown, Navigation, CalendarPlus, Check, Minus, ChevronsUpDown, ChevronsDownUp, MapPin, Tag, Building2 } from "lucide-react";
-import { Camp } from "../lib/types";
+import React, { useState, useMemo, memo, useEffect, useRef } from "react";
+import { ChevronDown, Navigation, CalendarPlus, Check, Minus, ChevronsUpDown, ChevronsDownUp, MapPin, Tag, Building2, Clock } from "lucide-react";
+import { Camp, hasExtendedCareAvailable, getExtendedCareCamps } from "../lib/types";
 import { Icons, getCategoryStyle, formatTime } from "../lib/utils";
+import { ExtendedCarePopover } from "./ExtendedCarePopover";
 
 const STORAGE_KEY = "calendar-collapsed-groups";
 const GROUP_BY_KEY = "calendar-group-by";
@@ -19,12 +20,16 @@ const GROUP_BY_OPTIONS: { value: GroupByOption; label: string }[] = [
 
 interface CampCalendarProps {
   camps: Camp[];
+  allCamps: Camp[];
   onSelect: (camp: Camp) => void;
   plannedCamps: Map<string, Camp[]>;
   onPlanCamp: (week: string, camp: Camp | null, action?: "add" | "remove") => void;
+  extendedCareAvailability: Set<string>;
 }
 
-export const CampCalendar = memo(function CampCalendar({ camps, onSelect, plannedCamps, onPlanCamp }: CampCalendarProps) {
+export const CampCalendar = memo(function CampCalendar({ camps, allCamps, onSelect, plannedCamps, onPlanCamp, extendedCareAvailability }: CampCalendarProps) {
+  const [openPopoverCampId, setOpenPopoverCampId] = useState<string | null>(null);
+  const badgeRefs = useRef<Map<string, HTMLButtonElement | null>>(new Map());
   const [groupBy, setGroupBy] = useState<GroupByOption>(() => {
     if (typeof window === "undefined") return "week";
     try {
@@ -397,6 +402,38 @@ export const CampCalendar = memo(function CampCalendar({ camps, onSelect, planne
                                 <Navigation className="w-3 h-3" />
                                 {camp.distance < 0.1 ? "< 0.1" : camp.distance.toFixed(1)} mi
                               </span>
+                            )}
+                            {hasExtendedCareAvailable(camp, extendedCareAvailability) && (
+                              <div className="relative">
+                                <button
+                                  ref={(el) => {
+                                    badgeRefs.current.set(camp.catalogId, el);
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenPopoverCampId(
+                                      openPopoverCampId === camp.catalogId ? null : camp.catalogId
+                                    );
+                                  }}
+                                  onKeyDown={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-violet-50 text-violet-600 text-[10px] font-bold rounded hover:bg-violet-100 hover:shadow-sm transition-all cursor-pointer"
+                                  aria-label="View extended care options"
+                                  aria-expanded={openPopoverCampId === camp.catalogId}
+                                >
+                                  <Clock className="w-3 h-3" />
+                                  Extended Care
+                                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${openPopoverCampId === camp.catalogId ? "rotate-180" : ""}`} />
+                                </button>
+                                {openPopoverCampId === camp.catalogId && (
+                                  <ExtendedCarePopover
+                                    camps={getExtendedCareCamps(camp.location, camp.dateRange, allCamps)}
+                                    onClose={() => setOpenPopoverCampId(null)}
+                                    onPlanCamp={onPlanCamp}
+                                    plannedCamps={plannedCamps}
+                                    anchorRef={{ current: badgeRefs.current.get(camp.catalogId) ?? null }}
+                                  />
+                                )}
+                              </div>
                             )}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-camp-bark/60">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, Suspense, lazy } from "react";
+import React, { useState, useEffect, useCallback, Suspense, lazy, useMemo } from "react";
 import {
   Search,
   MapPin,
@@ -25,7 +25,7 @@ import {
   CalendarPlus,
   Check,
 } from "lucide-react";
-import { Camp, CampsData, Filters } from "./lib/types";
+import { Camp, CampsData, Filters, buildExtendedCareAvailability, hasExtendedCareAvailable } from "./lib/types";
 import { Icons, getCategoryStyle, formatTime } from "./lib/utils";
 import { useGeolocation, usePersistentSet, useCampFiltering } from "./lib/hooks";
 import { CampList } from "./components";
@@ -59,6 +59,8 @@ const initialFilters: Filters = {
   endHour: null,
   fromDate: null,
   toDate: null,
+  hideExtendedCare: false,
+  onlyWithExtendedCare: false,
 };
 
 // URL params helpers
@@ -76,6 +78,8 @@ function filtersToParams(filters: Filters): URLSearchParams {
   if (filters.maxFee !== null) params.set("maxFee", filters.maxFee.toString());
   if (filters.fromDate) params.set("from", filters.fromDate);
   if (filters.toDate) params.set("to", filters.toDate);
+  if (filters.hideExtendedCare) params.set("hideEC", "true");
+  if (filters.onlyWithExtendedCare) params.set("withEC", "true");
   return params;
 }
 
@@ -92,6 +96,8 @@ function paramsToFilters(params: URLSearchParams): Filters {
     endHour: null,
     fromDate: params.get("from") || null,
     toDate: params.get("to") || null,
+    hideExtendedCare: params.get("hideEC") === "true",
+    onlyWithExtendedCare: params.get("withEC") === "true",
   };
 }
 
@@ -325,6 +331,11 @@ export default function HomePage() {
     showFavoritesOnly,
   });
 
+  // Compute which location+week combinations have extended care available
+  const extendedCareAvailability = useMemo(() => {
+    return buildExtendedCareAvailability(data?.camps ?? []);
+  }, [data?.camps]);
+
   const toggleFilter = (
     type: "categories" | "communities" | "dateRanges",
     value: string
@@ -351,7 +362,9 @@ export default function HomePage() {
     filters.startHour !== null ||
     filters.endHour !== null ||
     filters.fromDate !== null ||
-    filters.toDate !== null;
+    filters.toDate !== null ||
+    filters.hideExtendedCare ||
+    filters.onlyWithExtendedCare;
 
   if (loading) {
     return (
@@ -789,6 +802,45 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Extended Care Toggles */}
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={filters.hideExtendedCare}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    hideExtendedCare: e.target.checked,
+                  }))
+                }
+                className="w-4 h-4 rounded border-camp-sand text-camp-forest focus:ring-camp-forest cursor-pointer"
+              />
+              <span className="text-sm text-camp-bark group-hover:text-camp-pine transition-colors">
+                Hide Extended Care listings
+              </span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={filters.onlyWithExtendedCare}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    onlyWithExtendedCare: e.target.checked,
+                  }))
+                }
+                className="w-4 h-4 rounded border-camp-sand text-violet-600 focus:ring-violet-500 cursor-pointer"
+              />
+              <span className="text-sm text-camp-bark group-hover:text-camp-pine transition-colors">
+                Only camps with extended care
+              </span>
+            </label>
+            <p className="text-[10px] text-camp-bark/50 ml-7">
+              Filter by extended care availability
+            </p>
+          </div>
+
           {/* Categories */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-camp-bark/50 mb-2">
@@ -1043,11 +1095,13 @@ export default function HomePage() {
           {view === "list" && (
             <CampList
               camps={filteredCamps}
+              allCamps={data?.camps ?? []}
               onSelect={setSelectedCamp}
               favorites={favorites}
               onToggleFavorite={toggleFavorite}
               plannedCamps={plannedCamps}
               onPlanCamp={setPlannerCamp}
+              extendedCareAvailability={extendedCareAvailability}
             />
           )}
           {view === "map" && (
@@ -1071,9 +1125,11 @@ export default function HomePage() {
             <Suspense fallback={<ViewLoadingFallback />}>
               <CampCalendar
                 camps={filteredCamps}
+                allCamps={data?.camps ?? []}
                 onSelect={setSelectedCamp}
                 plannedCamps={plannedCamps}
                 onPlanCamp={setPlannerCamp}
+                extendedCareAvailability={extendedCareAvailability}
               />
             </Suspense>
           )}
