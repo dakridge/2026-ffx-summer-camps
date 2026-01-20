@@ -416,12 +416,13 @@ export const CampCalendar = memo(function CampCalendar({ camps, allCamps, onSele
                                     );
                                   }}
                                   onKeyDown={(e) => e.stopPropagation()}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-violet-50 text-violet-600 text-[10px] font-bold rounded hover:bg-violet-100 transition-colors cursor-pointer"
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-violet-50 text-violet-600 text-[10px] font-bold rounded hover:bg-violet-100 hover:shadow-sm transition-all cursor-pointer"
                                   aria-label="View extended care options"
                                   aria-expanded={openPopoverCampId === camp.catalogId}
                                 >
                                   <Clock className="w-3 h-3" />
                                   Extended Care
+                                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${openPopoverCampId === camp.catalogId ? "rotate-180" : ""}`} />
                                 </button>
                                 {openPopoverCampId === camp.catalogId && (
                                   <ExtendedCarePopover

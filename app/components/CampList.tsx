@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo, useState, useRef } from "react";
-import { Heart, Navigation, CalendarPlus, Check, Minus, Clock } from "lucide-react";
+import { Heart, Navigation, CalendarPlus, Check, Minus, Clock, ChevronDown } from "lucide-react";
 import { Camp, hasExtendedCareAvailable, getExtendedCareCamps } from "../lib/types";
 import { Icons, getCategoryStyle, formatTime } from "../lib/utils";
 import { ExtendedCarePopover } from "./ExtendedCarePopover";
@@ -147,12 +147,13 @@ export const CampList = memo(function CampList({
                       );
                     }}
                     onKeyDown={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-violet-50 text-violet-600 text-[10px] font-bold rounded-md hover:bg-violet-100 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-violet-50 text-violet-600 text-[10px] font-bold rounded-md hover:bg-violet-100 hover:shadow-sm transition-all cursor-pointer"
                     aria-label="View extended care options"
                     aria-expanded={openPopoverCampId === camp.catalogId}
                   >
                     <Clock className="w-3 h-3" />
                     Extended Care
+                    <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${openPopoverCampId === camp.catalogId ? "rotate-180" : ""}`} />
                   </button>
                   {openPopoverCampId === camp.catalogId && (
                     <ExtendedCarePopover
