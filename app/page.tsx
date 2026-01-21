@@ -1240,7 +1240,7 @@ function WelcomePopup({ onDismiss }: { onDismiss: () => void }) {
         <div className="p-6 space-y-4">
           <p className="text-camp-bark text-sm leading-relaxed">
             Hey there! We built this tool to help parents like you find the perfect summer camps
-            for your kids. Browse 500+ FCPA camps, filter by age, location, and dates —
+            for your kids. Browse 2000+ FCPA camps, filter by age, location, and dates —
             and plan your whole summer in one place.
           </p>
 

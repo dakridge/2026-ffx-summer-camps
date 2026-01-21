@@ -6,7 +6,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Fairfax County Summer Camps 2026 | Free Camp Finder & Planner",
   description:
-    "Find and compare 500+ FCPA summer camps in Fairfax County, VA. Filter by age, location, price, dates, and activities. Free planning tool for parents.",
+    "Find and compare 2000+ FCPA summer camps in Fairfax County, VA. Filter by age, location, price, dates, and activities. Free planning tool for parents.",
   keywords: [
     "Fairfax County summer camps",
     "FCPA camps 2026",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://ffxcamps.searchcradley.com",
     siteName: "Fairfax County Summer Camp Explorer",
-    title: "Find 500+ Fairfax County Summer Camps | Free Finder & Planner",
+    title: "Find 2000+ Fairfax County Summer Camps | Free Finder & Planner",
     description:
       "Search, filter, and plan your child's perfect summer. Compare FCPA camps by age, location, price, and activities. 100% free tool for parents.",
     locale: "en_US",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Find 500+ Fairfax County Summer Camps | Free Tool",
+    title: "Find 2000+ Fairfax County Summer Camps | Free Tool",
     description:
       "Search, filter, and plan your child's perfect summer. Compare FCPA camps by age, location, price, and activities.",
     images: ["https://ffxcamps.searchcradley.com/og-image.png"],
