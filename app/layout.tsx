@@ -81,11 +81,6 @@ const jsonLd = {
     name: "Cradley",
     url: "https://searchcradley.com",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.8",
-    ratingCount: "50",
-  },
 };
 
 export default function RootLayout({
